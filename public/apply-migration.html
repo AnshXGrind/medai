@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apply Migration - Quick Guide</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            max-width: 700px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        .steps {
+            counter-reset: step-counter;
+            list-style: none;
+        }
+        .steps li {
+            counter-increment: step-counter;
+            margin-bottom: 20px;
+            padding-left: 40px;
+            position: relative;
+            line-height: 1.6;
+        }
+        .steps li::before {
+            content: counter(step-counter);
+            position: absolute;
+            left: 0;
+            top: 0;
+            background: #667eea;
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .btn {
+            display: inline-block;
+            background: #10b981;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            margin: 5px;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .btn:hover {
+            background: #059669;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+        }
+        .btn-secondary {
+            background: #667eea;
+        }
+        .btn-secondary:hover {
+            background: #5568d3;
+        }
+        .code-block {
+            background: #f1f5f9;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            margin: 15px 0;
+            border-left: 4px solid #667eea;
+            overflow-x: auto;
+        }
+        .success-box {
+            background: #d1fae5;
+            border: 2px solid #10b981;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+        .success-box h3 {
+            color: #065f46;
+            margin-bottom: 10px;
+        }
+        .success-box p {
+            color: #047857;
+            line-height: 1.6;
+        }
+        .buttons {
+            margin-top: 30px;
+            text-align: center;
+        }
+        .file-name {
+            background: #fef3c7;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            color: #92400e;
+        }
+        .status-check {
+            background: #fee2e2;
+            border-left: 4px solid #ef4444;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .status-check h3 {
+            color: #991b1b;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+        .status-check p {
+            color: #7f1d1d;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Apply Database Migration</h1>
+        <p class="subtitle">Follow these simple steps to fix the "fail to fetch" error</p>
+        
+        <div class="status-check">
+            <h3>⚠️ Current Issue</h3>
+            <p>Sign up/sign in is failing because the database doesn't have the new Health ID columns yet. The code is trying to save <code>health_id_number</code> to a column that doesn't exist.</p>
+        </div>
+
+        <ol class="steps">
+            <li>
+                Click the button below to open Supabase SQL Editor
+                <div class="buttons" style="margin: 15px 0;">
+                    <a href="https://app.supabase.com/project/tdfkrllvxlrukdzsiwjd/editor" 
+                       class="btn" 
+                       target="_blank"
+                       id="openDashboard">
+                        Open Supabase Dashboard →
+                    </a>
+                </div>
+            </li>
+            
+            <li>
+                In the Supabase dashboard:
+                <ul style="margin-left: 20px; margin-top: 8px; list-style: disc;">
+                    <li>Click <strong>"SQL Editor"</strong> in the left sidebar</li>
+                    <li>Click <strong>"New Query"</strong> button</li>
+                </ul>
+            </li>
+            
+            <li>
+                The migration file is already open in VS Code. Copy it:
+                <div class="code-block">
+                    File: <span class="file-name">supabase/migrations/20251103_health_id_multi_factor_verification.sql</span>
+                </div>
+                <ul style="margin-left: 20px; list-style: disc;">
+                    <li>Press <kbd>Ctrl+A</kbd> to select all</li>
+                    <li>Press <kbd>Ctrl+C</kbd> to copy</li>
+                </ul>
+            </li>
+            
+            <li>
+                In the Supabase SQL Editor:
+                <ul style="margin-left: 20px; margin-top: 8px; list-style: disc;">
+                    <li>Click in the editor</li>
+                    <li>Press <kbd>Ctrl+V</kbd> to paste</li>
+                    <li>Click <strong>"Run"</strong> or press <kbd>Ctrl+Enter</kbd></li>
+                </ul>
+            </li>
+            
+            <li>
+                Wait for the <strong style="color: #10b981;">"Success"</strong> message (should take 2-3 seconds)
+            </li>
+            
+            <li>
+                Verify the migration worked:
+                <ul style="margin-left: 20px; margin-top: 8px; list-style: disc;">
+                    <li>Go to <strong>Table Editor</strong> → <strong>profiles</strong></li>
+                    <li>Check for new columns: <span class="file-name">health_id_hash</span>, <span class="file-name">health_id_last_four</span>, <span class="file-name">pan_hash</span>, etc.</li>
+                </ul>
+            </li>
+        </ol>
+
+        <div class="success-box">
+            <h3>✅ After Migration is Applied</h3>
+            <p><strong>Test the fix:</strong></p>
+            <ol style="margin-left: 20px; margin-top: 10px;">
+                <li>Go to <a href="http://localhost:8081" target="_blank">http://localhost:8081</a></li>
+                <li>Try signing up with:
+                    <div class="code-block" style="margin: 10px 0;">
+Email: test@example.com<br>
+Password: TestPass123!<br>
+Full Name: Test User<br>
+Health ID: 12345678901234
+                    </div>
+                </li>
+                <li>Sign up should work now! 🎉</li>
+            </ol>
+        </div>
+
+        <div class="buttons">
+            <a href="https://app.supabase.com/project/tdfkrllvxlrukdzsiwjd/editor" 
+               class="btn" 
+               target="_blank">
+                🔗 Open Supabase SQL Editor
+            </a>
+            <button class="btn btn-secondary" onclick="copyToClipboard()">
+                📋 Copy Migration Path
+            </button>
+            <a href="http://localhost:8081/env-check.html" class="btn" target="_blank" style="background: #f59e0b;">
+                🧪 Test Connection
+            </a>
+        </div>
+    </div>
+
+    <script>
+        function copyToClipboard() {
+            const text = 'supabase/migrations/20251103_health_id_multi_factor_verification.sql';
+            navigator.clipboard.writeText(text).then(() => {
+                alert('✅ Migration file path copied to clipboard!');
+            });
+        }
+
+        // Track if dashboard was opened
+        document.getElementById('openDashboard').addEventListener('click', function() {
+            localStorage.setItem('dashboardOpened', 'true');
+        });
+
+        // Check if we should show success message
+        if (localStorage.getItem('dashboardOpened') === 'true') {
+            console.log('Dashboard was opened. Waiting for migration completion...');
+        }
+    </script>
+</body>
+</html>

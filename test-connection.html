@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Supabase Connection Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .status {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        button:hover { background: #45a049; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Supabase Connection Test</h1>
+    <div id="output"></div>
+    
+    <h2>Actions:</h2>
+    <button onclick="testConnection()">Test Connection</button>
+    <button onclick="testSignUp()">Test Sign Up</button>
+    <button onclick="testSignIn()">Test Sign In</button>
+
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+        const SUPABASE_URL = 'https://tdfkrllvxlrukdzsiwjd.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRkZmtybGx2eGxydWtkenNpd2pkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE3MDM3NTEsImV4cCI6MjA3NzI3OTc1MX0.vn8vmT2zmfgxiFlFkUg_XrjbIBlCGkARCMzRcT8hIpI';
+
+        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        window.supabase = supabase;
+
+        function log(message, type = 'info') {
+            const output = document.getElementById('output');
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.innerHTML = message;
+            output.appendChild(div);
+        }
+
+        window.testConnection = async function() {
+            document.getElementById('output').innerHTML = '';
+            log('Testing Supabase connection...', 'info');
+            
+            try {
+                // Test 1: Check if client is initialized
+                log('✅ Supabase client initialized', 'success');
+                log(`URL: ${SUPABASE_URL}`, 'info');
+                
+                // Test 2: Try to get session
+                const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+                if (sessionError) {
+                    log(`❌ Session check failed: ${sessionError.message}`, 'error');
+                } else {
+                    log(`✅ Session check successful. Logged in: ${session ? 'Yes' : 'No'}`, 'success');
+                    if (session) {
+                        log(`<pre>User: ${JSON.stringify(session.user, null, 2)}</pre>`, 'info');
+                    }
+                }
+
+                // Test 3: Try a simple query (will fail if no table, but tests connection)
+                const { data, error } = await supabase.from('profiles').select('count').limit(1);
+                if (error) {
+                    if (error.code === '42P01') {
+                        log('⚠️ Connection OK but profiles table does not exist', 'info');
+                    } else {
+                        log(`Query error: ${error.message}`, 'error');
+                    }
+                } else {
+                    log('✅ Database query successful!', 'success');
+                }
+
+            } catch (err) {
+                log(`❌ Connection test failed: ${err.message}`, 'error');
+                log(`<pre>${err.stack}</pre>`, 'error');
+            }
+        };
+
+        window.testSignUp = async function() {
+            const testEmail = `test_${Date.now()}@example.com`;
+            const testPassword = 'Test123456!';
+            
+            log(`🔐 Testing sign up with: ${testEmail}`, 'info');
+            
+            try {
+                const { data, error } = await supabase.auth.signUp({
+                    email: testEmail,
+                    password: testPassword,
+                    options: {
+                        data: {
+                            full_name: 'Test User',
+                            role: 'patient'
+                        }
+                    }
+                });
+
+                if (error) {
+                    log(`❌ Sign up failed: ${error.message}`, 'error');
+                } else {
+                    log('✅ Sign up successful!', 'success');
+                    log(`<pre>${JSON.stringify(data, null, 2)}</pre>`, 'info');
+                }
+            } catch (err) {
+                log(`❌ Sign up error: ${err.message}`, 'error');
+            }
+        };
+
+        window.testSignIn = async function() {
+            const email = prompt('Enter email to test:');
+            const password = prompt('Enter password:');
+            
+            if (!email || !password) {
+                log('❌ Cancelled', 'error');
+                return;
+            }
+
+            log(`🔐 Testing sign in with: ${email}`, 'info');
+            
+            try {
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email,
+                    password
+                });
+
+                if (error) {
+                    log(`❌ Sign in failed: ${error.message}`, 'error');
+                    log(`Error details: <pre>${JSON.stringify(error, null, 2)}</pre>`, 'error');
+                } else {
+                    log('✅ Sign in successful!', 'success');
+                    log(`<pre>${JSON.stringify(data.user, null, 2)}</pre>`, 'info');
+                }
+            } catch (err) {
+                log(`❌ Sign in error: ${err.message}`, 'error');
+            }
+        };
+
+        // Auto-run connection test on load
+        window.addEventListener('load', () => {
+            setTimeout(() => testConnection(), 500);
+        });
+    </script>
+</body>
+</html>

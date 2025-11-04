@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Environment Variables Check</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        .success {
+            background-color: rgba(34, 197, 94, 0.3);
+            border: 1px solid rgba(34, 197, 94, 0.5);
+        }
+        .error {
+            background-color: rgba(239, 68, 68, 0.3);
+            border: 1px solid rgba(239, 68, 68, 0.5);
+        }
+        .warning {
+            background-color: rgba(251, 191, 36, 0.3);
+            border: 1px solid rgba(251, 191, 36, 0.5);
+        }
+        h1 { text-align: center; margin-bottom: 30px; }
+        h2 { border-bottom: 2px solid rgba(255, 255, 255, 0.3); padding-bottom: 10px; }
+        code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+        .test-btn {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+            transition: all 0.3s;
+        }
+        .test-btn:hover {
+            background: #059669;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+        }
+        .test-btn:disabled {
+            background: #6b7280;
+            cursor: not-allowed;
+            transform: none;
+        }
+        pre {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            max-height: 300px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Environment Variables & Supabase Check</h1>
+    
+    <div class="card">
+        <h2>Environment Variables Status</h2>
+        <div id="envStatus">Checking...</div>
+    </div>
+
+    <div class="card">
+        <h2>Supabase Connection Test</h2>
+        <button class="test-btn" onclick="testSupabaseConnection()">Test Connection</button>
+        <button class="test-btn" onclick="testSignUp()">Test Sign Up</button>
+        <button class="test-btn" onclick="testSignIn()">Test Sign In</button>
+        <div id="connectionStatus"></div>
+    </div>
+
+    <div class="card">
+        <h2>Console Logs</h2>
+        <div id="logs"></div>
+    </div>
+
+    <script type="module">
+        const logs = [];
+        
+        function addLog(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            logs.push({ timestamp, message, type });
+            updateLogsDisplay();
+        }
+
+        function updateLogsDisplay() {
+            const logsDiv = document.getElementById('logs');
+            logsDiv.innerHTML = '<pre>' + logs.map(log => 
+                `[${log.timestamp}] ${log.type.toUpperCase()}: ${log.message}`
+            ).join('\n') + '</pre>';
+        }
+
+        // Check environment variables
+        function checkEnvVars() {
+            const envStatus = document.getElementById('envStatus');
+            let html = '';
+
+            // Check Supabase URL
+            const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+            if (supabaseUrl) {
+                html += `<div class="status success">✅ VITE_SUPABASE_URL: ${supabaseUrl.substring(0, 30)}...</div>`;
+                addLog(`Supabase URL found: ${supabaseUrl}`, 'success');
+            } else {
+                html += `<div class="status error">❌ VITE_SUPABASE_URL: Missing</div>`;
+                addLog('Supabase URL is missing!', 'error');
+            }
+
+            // Check Supabase Anon Key
+            const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+            if (supabaseKey) {
+                html += `<div class="status success">✅ VITE_SUPABASE_ANON_KEY: ${supabaseKey.substring(0, 30)}...</div>`;
+                addLog(`Supabase Key found: ${supabaseKey.substring(0, 30)}...`, 'success');
+            } else {
+                html += `<div class="status error">❌ VITE_SUPABASE_ANON_KEY: Missing</div>`;
+                addLog('Supabase Anon Key is missing!', 'error');
+            }
+
+            // Check other vars
+            const googleMapsKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+            if (googleMapsKey) {
+                html += `<div class="status success">✅ VITE_GOOGLE_MAPS_API_KEY: Set</div>`;
+            } else {
+                html += `<div class="status warning">⚠️ VITE_GOOGLE_MAPS_API_KEY: Not set (optional)</div>`;
+            }
+
+            envStatus.innerHTML = html;
+        }
+
+        // Test Supabase connection
+        window.testSupabaseConnection = async function() {
+            addLog('Testing Supabase connection...', 'info');
+            const statusDiv = document.getElementById('connectionStatus');
+            statusDiv.innerHTML = '<div class="status warning">⏳ Testing connection...</div>';
+
+            try {
+                const { createClient } = await import('@supabase/supabase-js');
+                const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+                const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
+                if (!supabaseUrl || !supabaseKey) {
+                    throw new Error('Missing Supabase credentials');
+                }
+
+                const supabase = createClient(supabaseUrl, supabaseKey);
+                
+                // Test connection with a simple query
+                const { data, error } = await supabase.from('profiles').select('count').limit(1);
+                
+                if (error) {
+                    throw error;
+                }
+
+                statusDiv.innerHTML = '<div class="status success">✅ Connection successful! Database is reachable.</div>';
+                addLog('Supabase connection test passed', 'success');
+                addLog(`Data received: ${JSON.stringify(data)}`, 'info');
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="status error">❌ Connection failed: ${error.message}</div>`;
+                addLog(`Connection test failed: ${error.message}`, 'error');
+                addLog(`Error stack: ${error.stack}`, 'error');
+            }
+        };
+
+        // Test Sign Up
+        window.testSignUp = async function() {
+            addLog('Testing Sign Up...', 'info');
+            const statusDiv = document.getElementById('connectionStatus');
+            statusDiv.innerHTML = '<div class="status warning">⏳ Testing sign up...</div>';
+
+            try {
+                const { createClient } = await import('@supabase/supabase-js');
+                const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+                const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
+                const supabase = createClient(supabaseUrl, supabaseKey);
+                
+                const testEmail = `test${Date.now()}@example.com`;
+                const testPassword = 'TestPassword123!';
+                
+                addLog(`Attempting sign up with email: ${testEmail}`, 'info');
+
+                const { data, error } = await supabase.auth.signUp({
+                    email: testEmail,
+                    password: testPassword,
+                    options: {
+                        data: {
+                            full_name: 'Test User',
+                            role: 'patient',
+                            health_id_number: '12345678901234'
+                        }
+                    }
+                });
+
+                if (error) {
+                    throw error;
+                }
+
+                statusDiv.innerHTML = '<div class="status success">✅ Sign up successful!</div>';
+                addLog('Sign up test passed', 'success');
+                addLog(`Response: ${JSON.stringify(data, null, 2)}`, 'info');
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="status error">❌ Sign up failed: ${error.message}</div>`;
+                addLog(`Sign up test failed: ${error.message}`, 'error');
+                addLog(`Error details: ${JSON.stringify(error, null, 2)}`, 'error');
+            }
+        };
+
+        // Test Sign In
+        window.testSignIn = async function() {
+            addLog('Testing Sign In...', 'info');
+            const statusDiv = document.getElementById('connectionStatus');
+            statusDiv.innerHTML = '<div class="status warning">⏳ Testing sign in...</div>';
+
+            try {
+                const { createClient } = await import('@supabase/supabase-js');
+                const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+                const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
+                const supabase = createClient(supabaseUrl, supabaseKey);
+                
+                // Use a test account (you'll need to create this first)
+                const testEmail = 'test@example.com';
+                const testPassword = 'testpassword';
+                
+                addLog(`Attempting sign in with email: ${testEmail}`, 'info');
+
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: testEmail,
+                    password: testPassword
+                });
+
+                if (error) {
+                    throw error;
+                }
+
+                statusDiv.innerHTML = '<div class="status success">✅ Sign in successful!</div>';
+                addLog('Sign in test passed', 'success');
+                addLog(`User: ${data.user?.email}`, 'info');
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="status error">❌ Sign in failed: ${error.message}</div>`;
+                addLog(`Sign in test failed: ${error.message}`, 'error');
+                addLog(`Error details: ${JSON.stringify(error, null, 2)}`, 'error');
+            }
+        };
+
+        // Initialize
+        checkEnvVars();
+        addLog('Environment check complete', 'info');
+    </script>
+</body>
+</html>

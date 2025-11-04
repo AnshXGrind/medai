@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vite Env Check</title>
+  <style>
+    body {
+      font-family: monospace;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background-color: #1e1e1e;
+      color: #d4d4d4;
+    }
+    h1 { color: #4ec9b0; }
+    .env-var {
+      background-color: #2d2d30;
+      padding: 15px;
+      margin: 10px 0;
+      border-left: 4px solid #007acc;
+      border-radius: 4px;
+    }
+    .env-var.missing {
+      border-left-color: #f48771;
+    }
+    .env-var.present {
+      border-left-color: #4ec9b0;
+    }
+    .key {
+      color: #9cdcfe;
+      font-weight: bold;
+    }
+    .value {
+      color: #ce9178;
+      word-break: break-all;
+    }
+    .status {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 3px;
+      font-size: 12px;
+      margin-left: 10px;
+    }
+    .status.ok {
+      background-color: #4ec9b0;
+      color: #1e1e1e;
+    }
+    .status.error {
+      background-color: #f48771;
+      color: #1e1e1e;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔍 Vite Environment Variables Check</h1>
+  <p>This page shows what environment variables Vite has loaded from your .env file</p>
+  
+  <div id="env-check"></div>
+
+  <script type="module">
+    const container = document.getElementById('env-check');
+    
+    const requiredVars = [
+      'VITE_SUPABASE_URL',
+      'VITE_SUPABASE_ANON_KEY',
+      'VITE_SUPABASE_PROJECT_ID',
+      'VITE_SUPABASE_PUBLISHABLE_KEY'
+    ];
+    
+    function checkEnvVar(key) {
+      const value = import.meta.env[key];
+      const isPresent = !!value;
+      
+      const div = document.createElement('div');
+      div.className = `env-var ${isPresent ? 'present' : 'missing'}`;
+      
+      const status = isPresent ? 
+        '<span class="status ok">✓ PRESENT</span>' : 
+        '<span class="status error">✗ MISSING</span>';
+      
+      div.innerHTML = `
+        <div class="key">${key} ${status}</div>
+        <div class="value">${isPresent ? (value.length > 50 ? value.substring(0, 50) + '...' : value) : 'undefined'}</div>
+      `;
+      
+      return div;
+    }
+    
+    requiredVars.forEach(varName => {
+      container.appendChild(checkEnvVar(varName));
+    });
+    
+    // Show all VITE_ variables
+    const allEnvDiv = document.createElement('div');
+    allEnvDiv.innerHTML = '<h2>All Vite Environment Variables:</h2>';
+    container.appendChild(allEnvDiv);
+    
+    const allViteVars = Object.keys(import.meta.env).filter(key => key.startsWith('VITE_'));
+    
+    if (allViteVars.length === 0) {
+      const noVars = document.createElement('div');
+      noVars.className = 'env-var missing';
+      noVars.innerHTML = '<div class="key">⚠️ No VITE_ environment variables found!</div>';
+      container.appendChild(noVars);
+    } else {
+      allViteVars.forEach(key => {
+        container.appendChild(checkEnvVar(key));
+      });
+    }
+  </script>
+</body>
+</html>

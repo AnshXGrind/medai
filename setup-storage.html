@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Setup Supabase Storage</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .step {
+            background: #f8f9fa;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 6px;
+            border-left: 4px solid #4CAF50;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .status {
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+        .instruction {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 6px;
+        }
+        pre {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🗄️ Setup Supabase Storage</h1>
+        
+        <div class="instruction">
+            <strong>📋 Instructions:</strong><br>
+            This will create the <code>documents</code> storage bucket in your Supabase project.
+            Make sure you're signed in to your Supabase account before running this.
+        </div>
+
+        <div class="step">
+            <h3>Step 1: Open Supabase SQL Editor</h3>
+            <p>Go to: <a href="https://supabase.com/dashboard/project/tdfkrllvxlrukdzsiwjd/sql/new" target="_blank">
+                Supabase SQL Editor
+            </a></p>
+        </div>
+
+        <div class="step">
+            <h3>Step 2: Run This SQL Command</h3>
+            <p>Copy and paste this into the SQL editor and click "Run":</p>
+            <pre>-- Create documents storage bucket
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES (
+  'documents',
+  'documents',
+  true,
+  10485760,
+  ARRAY['image/jpeg', 'image/png', 'image/jpg', 'image/webp', 'application/pdf']
+)
+ON CONFLICT (id) DO UPDATE
+SET public = true;
+
+-- Allow authenticated users to upload
+CREATE POLICY IF NOT EXISTS "Authenticated users can upload documents"
+ON storage.objects FOR INSERT
+TO authenticated
+WITH CHECK (bucket_id = 'documents');
+
+-- Allow public read access
+CREATE POLICY IF NOT EXISTS "Public can view documents"
+ON storage.objects FOR SELECT
+TO public
+USING (bucket_id = 'documents');
+
+-- Allow authenticated users to update
+CREATE POLICY IF NOT EXISTS "Authenticated users can update documents"
+ON storage.objects FOR UPDATE
+TO authenticated
+USING (bucket_id = 'documents');
+
+-- Allow authenticated users to delete
+CREATE POLICY IF NOT EXISTS "Authenticated users can delete documents"
+ON storage.objects FOR DELETE
+TO authenticated
+USING (bucket_id = 'documents');</pre>
+            <button onclick="copySQL()">📋 Copy SQL</button>
+        </div>
+
+        <div class="step">
+            <h3>Step 3: Verify Setup</h3>
+            <p>After running the SQL, check your bucket:</p>
+            <button onclick="window.open('https://supabase.com/dashboard/project/tdfkrllvxlrukdzsiwjd/storage/buckets', '_blank')">
+                🗂️ Open Storage Dashboard
+            </button>
+            <p style="margin-top: 15px;">You should see a bucket named <code>documents</code> marked as public.</p>
+        </div>
+
+        <div class="step">
+            <h3>Step 4: Test Upload</h3>
+            <p>Once the bucket is created, go back to your app and try uploading a prescription or Aadhaar document.</p>
+            <button onclick="window.location.href='http://localhost:8082'">
+                🚀 Open App
+            </button>
+        </div>
+
+        <div id="status"></div>
+
+        <div class="step" style="border-left-color: #2196F3;">
+            <h3>Alternative: Manual Setup via Dashboard</h3>
+            <ol>
+                <li>Go to <a href="https://supabase.com/dashboard/project/tdfkrllvxlrukdzsiwjd/storage/buckets" target="_blank">Storage</a></li>
+                <li>Click "New bucket"</li>
+                <li>Name: <code>documents</code></li>
+                <li>✅ Check "Public bucket"</li>
+                <li>File size limit: <code>10 MB</code></li>
+                <li>Allowed MIME types: <code>image/*, application/pdf</code></li>
+                <li>Click "Create bucket"</li>
+            </ol>
+            <button onclick="window.open('https://supabase.com/dashboard/project/tdfkrllvxlrukdzsiwjd/storage/buckets', '_blank')">
+                🗂️ Go to Storage
+            </button>
+        </div>
+    </div>
+
+    <script>
+        function copySQL() {
+            const sql = `-- Create documents storage bucket
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES (
+  'documents',
+  'documents',
+  true,
+  10485760,
+  ARRAY['image/jpeg', 'image/png', 'image/jpg', 'image/webp', 'application/pdf']
+)
+ON CONFLICT (id) DO UPDATE
+SET public = true;
+
+-- Allow authenticated users to upload
+CREATE POLICY IF NOT EXISTS "Authenticated users can upload documents"
+ON storage.objects FOR INSERT
+TO authenticated
+WITH CHECK (bucket_id = 'documents');
+
+-- Allow public read access
+CREATE POLICY IF NOT EXISTS "Public can view documents"
+ON storage.objects FOR SELECT
+TO public
+USING (bucket_id = 'documents');
+
+-- Allow authenticated users to update
+CREATE POLICY IF NOT EXISTS "Authenticated users can update documents"
+ON storage.objects FOR UPDATE
+TO authenticated
+USING (bucket_id = 'documents');
+
+-- Allow authenticated users to delete
+CREATE POLICY IF NOT EXISTS "Authenticated users can delete documents"
+ON storage.objects FOR DELETE
+TO authenticated
+USING (bucket_id = 'documents');`;
+
+            navigator.clipboard.writeText(sql).then(() => {
+                const statusDiv = document.getElementById('status');
+                statusDiv.innerHTML = '<div class="status success">✅ SQL copied to clipboard! Now paste it in the Supabase SQL Editor.</div>';
+                setTimeout(() => {
+                    statusDiv.innerHTML = '';
+                }, 3000);
+            }).catch(err => {
+                alert('Failed to copy. Please manually copy the SQL above.');
+            });
+        }
+    </script>
+</body>
+</html>

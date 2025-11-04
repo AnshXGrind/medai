@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedAid Debug Page</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .status-box {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+            border-left: 4px solid #667eea;
+        }
+        .success { border-left-color: #28a745; background: #d4edda; }
+        .error { border-left-color: #dc3545; background: #f8d7da; }
+        .warning { border-left-color: #ffc107; background: #fff3cd; }
+        .status-title {
+            font-weight: 600;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        .status-content {
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 10px 5px 10px 0;
+            transition: transform 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        .link-button {
+            background: #28a745;
+        }
+        pre {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 13px;
+            margin: 10px 0;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏥 MedAid Debug Center</h1>
+        <p class="subtitle">System Diagnostic & Troubleshooting</p>
+
+        <div id="status-container">
+            <div class="status-box">
+                <div class="status-title">
+                    <span class="loading"></span>
+                    Running diagnostics...
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top: 30px;">
+            <button onclick="runAllTests()">🔄 Re-run Tests</button>
+            <button onclick="window.location.href='/'" class="link-button">🏠 Go to Home Page</button>
+            <button onclick="clearCacheAndReload()">🗑️ Clear Cache & Reload</button>
+        </div>
+    </div>
+
+    <script>
+        const statusContainer = document.getElementById('status-container');
+
+        function addStatus(title, content, type = 'status-box') {
+            const div = document.createElement('div');
+            div.className = `status-box ${type}`;
+            div.innerHTML = `
+                <div class="status-title">${title}</div>
+                <div class="status-content">${content}</div>
+            `;
+            statusContainer.appendChild(div);
+        }
+
+        function clearStatus() {
+            statusContainer.innerHTML = '';
+        }
+
+        async function runAllTests() {
+            clearStatus();
+            addStatus('🔍 Running diagnostics...', 'Please wait...');
+
+            // Test 1: Check if running in browser
+            setTimeout(() => {
+                clearStatus();
+                addStatus('✅ JavaScript Execution', 'JavaScript is working correctly', 'success');
+
+                // Test 2: Check viewport
+                addStatus('✅ Viewport', `Width: ${window.innerWidth}px, Height: ${window.innerHeight}px`, 'success');
+
+                // Test 3: Check localStorage
+                try {
+                    localStorage.setItem('test', 'test');
+                    localStorage.removeItem('test');
+                    addStatus('✅ LocalStorage', 'LocalStorage is available and working', 'success');
+                } catch (e) {
+                    addStatus('❌ LocalStorage', `LocalStorage failed: ${e.message}`, 'error');
+                }
+
+                // Test 4: Check if service worker is registered
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.getRegistrations().then(registrations => {
+                        if (registrations.length > 0) {
+                            addStatus('✅ Service Worker', `${registrations.length} service worker(s) registered`, 'success');
+                        } else {
+                            addStatus('ℹ️ Service Worker', 'No service workers registered yet', 'warning');
+                        }
+                    });
+                } else {
+                    addStatus('⚠️ Service Worker', 'Service Worker API not supported', 'warning');
+                }
+
+                // Test 5: Check React app
+                testReactApp();
+
+                // Test 6: Check environment
+                testEnvironment();
+
+                // Test 7: Check network
+                testNetwork();
+            }, 500);
+        }
+
+        async function testReactApp() {
+            try {
+                const response = await fetch('/');
+                const html = await response.text();
+                
+                if (html.includes('root')) {
+                    addStatus('✅ React App HTML', 'Root div found in HTML', 'success');
+                } else {
+                    addStatus('❌ React App HTML', 'Root div NOT found in HTML', 'error');
+                }
+
+                if (html.includes('script') || html.includes('module')) {
+                    addStatus('✅ React App Scripts', 'JavaScript modules found in HTML', 'success');
+                } else {
+                    addStatus('❌ React App Scripts', 'No JavaScript found in HTML', 'error');
+                }
+            } catch (e) {
+                addStatus('❌ React App', `Failed to fetch: ${e.message}`, 'error');
+            }
+        }
+
+        function testEnvironment() {
+            const checks = [
+                { name: 'User Agent', value: navigator.userAgent },
+                { name: 'Platform', value: navigator.platform },
+                { name: 'Language', value: navigator.language },
+                { name: 'Online Status', value: navigator.onLine ? 'Online ✅' : 'Offline ❌' },
+                { name: 'Cookies Enabled', value: navigator.cookieEnabled ? 'Yes ✅' : 'No ❌' }
+            ];
+
+            const content = checks.map(c => `<strong>${c.name}:</strong> ${c.value}`).join('<br>');
+            addStatus('ℹ️ Browser Information', content);
+        }
+
+        async function testNetwork() {
+            const endpoints = [
+                { name: 'Home Page', url: '/' },
+                { name: 'Supabase', url: 'https://tdfkrllvxlrukdzsiwjd.supabase.co' }
+            ];
+
+            for (const endpoint of endpoints) {
+                try {
+                    const start = Date.now();
+                    const response = await fetch(endpoint.url, { method: 'HEAD' });
+                    const time = Date.now() - start;
+                    
+                    if (response.ok || response.status < 500) {
+                        addStatus(`✅ ${endpoint.name}`, `Reachable (${time}ms, Status: ${response.status})`, 'success');
+                    } else {
+                        addStatus(`⚠️ ${endpoint.name}`, `Server error (Status: ${response.status})`, 'warning');
+                    }
+                } catch (e) {
+                    addStatus(`❌ ${endpoint.name}`, `Failed: ${e.message}`, 'error');
+                }
+            }
+        }
+
+        function clearCacheAndReload() {
+            if (confirm('This will clear all cached data and reload. Continue?')) {
+                // Clear localStorage
+                localStorage.clear();
+                
+                // Clear sessionStorage
+                sessionStorage.clear();
+                
+                // Unregister service workers
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.getRegistrations().then(registrations => {
+                        registrations.forEach(reg => reg.unregister());
+                    });
+                }
+                
+                // Hard reload
+                window.location.reload(true);
+            }
+        }
+
+        // Auto-run on load
+        window.addEventListener('load', runAllTests);
+    </script>
+</body>
+</html>
