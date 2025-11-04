@@ -30,6 +30,8 @@ import {
   Calendar
 } from "lucide-react";
 import { toast } from "sonner";
+import { generateHealthId, STATE_CODES } from "@/lib/universalHealthId";
+import QRCodeGenerator from "@/components/QRCodeGenerator";
 
 interface DocumentUpload {
   type: string;
@@ -246,18 +248,19 @@ export default function CreateHealthID() {
     setIsSubmitting(true);
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      // Get state code from state name
+      const stateEntry = Object.entries(STATE_CODES).find(
+        ([_, name]) => name.toLowerCase() === formData.state.toLowerCase()
+      );
+      const stateCode = stateEntry ? stateEntry[0] : '01'; // Default to 01 if not found
 
-      // Generate unique Health ID
-      const timestamp = Date.now().toString(36).toUpperCase();
-      const random = Math.random().toString(36).substring(2, 8).toUpperCase();
-      const healthId = `MED-${timestamp}-${random}`;
+      // Generate unique Health ID using the utility function
+      const healthId = await generateHealthId(stateCode);
 
       setGeneratedHealthId(healthId);
       setHealthIdCreated(true);
 
-      toast.success("Health ID created successfully!", {
+      toast.success("Universal Health ID created successfully!", {
         description: `Your Health ID: ${healthId}`
       });
 
@@ -284,30 +287,37 @@ export default function CreateHealthID() {
 
               <div>
                 <h1 className="text-3xl font-bold text-green-600 dark:text-green-400 mb-2">
-                  🎉 Health ID Created Successfully!
+                  🎉 Universal Health ID Created Successfully!
                 </h1>
                 <p className="text-muted-foreground">
-                  Your unique health identifier has been generated
+                  Your unique 14-digit health identifier has been generated
                 </p>
               </div>
 
               {/* Health ID Card */}
               <div className="p-6 bg-gradient-to-r from-green-500 to-blue-500 rounded-xl text-white shadow-lg">
-                <div className="text-sm mb-2 opacity-90">MedAid Health ID</div>
-                <div className="text-3xl font-bold font-mono mb-4">{generatedHealthId}</div>
+                <div className="text-sm mb-2 opacity-90">Universal Health ID (NDHM)</div>
+                <div className="text-2xl font-bold font-mono mb-4 tracking-wider">{generatedHealthId}</div>
                 <div className="flex items-center justify-between">
                   <div className="text-left">
                     <div className="text-xs opacity-80">Holder Name</div>
                     <div className="text-sm font-semibold">
                       {formData.firstName} {formData.lastName}
                     </div>
+                    <div className="text-xs opacity-80 mt-2">Date of Birth</div>
+                    <div className="text-sm">
+                      {formData.dateOfBirth ? new Date(formData.dateOfBirth).toLocaleDateString('en-IN') : ''}
+                    </div>
                   </div>
                   <div className="p-2 bg-white rounded">
-                    <QrCode className="h-12 w-12 text-green-600" />
+                    <QRCodeGenerator 
+                      data={generatedHealthId}
+                      size={100}
+                    />
                   </div>
                 </div>
                 <div className="mt-4 text-xs opacity-80">
-                  Valid from: {new Date().toLocaleDateString('en-IN')}
+                  Valid from: {new Date().toLocaleDateString('en-IN')} | State: {formData.state}
                 </div>
               </div>
 

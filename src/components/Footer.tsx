@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
-import { Activity, Mail, Facebook, Twitter, Linkedin, Instagram } from "lucide-react";
+import { Activity, Mail, Facebook, Twitter, Linkedin, Instagram, Stethoscope, User } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const Footer = () => {
   return (
@@ -51,6 +52,40 @@ const Footer = () => {
                   Contact
                 </Link>
               </li>
+              <li>
+                <Link to="/offers" className="text-sm text-muted-foreground hover:text-primary transition-smooth">
+                  Health Offers
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Quick Access */}
+          <div>
+            <h3 className="font-semibold mb-4">Quick Access</h3>
+            <ul className="space-y-3">
+              <li>
+                <Link to="/auth">
+                  <Button variant="outline" size="sm" className="w-full justify-start">
+                    <User className="h-4 w-4 mr-2" />
+                    Patient Login
+                  </Button>
+                </Link>
+              </li>
+              <li>
+                <Link to="/auth">
+                  <Button variant="outline" size="sm" className="w-full justify-start">
+                    <Stethoscope className="h-4 w-4 mr-2" />
+                    Doctor Login
+                  </Button>
+                </Link>
+              </li>
+              <li>
+                <Link to="/health-id-login" className="text-sm text-muted-foreground hover:text-primary transition-smooth flex items-center">
+                  <Activity className="h-3 w-3 mr-2" />
+                  Health ID Access
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -62,6 +97,7 @@ const Footer = () => {
               <li className="text-sm text-muted-foreground">Doctor Consultation</li>
               <li className="text-sm text-muted-foreground">Hospital Locator</li>
               <li className="text-sm text-muted-foreground">Health Records</li>
+              <li className="text-sm text-muted-foreground">Universal Health ID</li>
             </ul>
           </div>
 

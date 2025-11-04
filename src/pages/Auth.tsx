@@ -122,7 +122,7 @@ const Auth = () => {
     }
 
     if (userType === "doctor" && !medicalId) {
-      toast.error("Medical ID is required for doctors");
+      toast.error("Doctor License ID is required for verification");
       return;
     }
 
@@ -151,8 +151,33 @@ const Auth = () => {
               </span>
             </Link>
             <h1 className="text-3xl font-bold mb-2">Welcome Back</h1>
-            <p className="text-muted-foreground">Sign in to access your healthcare dashboard</p>
+            <p className="text-muted-foreground">
+              {userType === "patient" 
+                ? "Access your Health Profile and manage your complete medical journey" 
+                : "Access your Professional Dashboard and manage your practice"
+              }
+            </p>
           </div>
+
+          {/* Quick Access Health ID */}
+          <Card className="mb-6 border-2 border-primary/20 bg-primary/5 animate-fade-in">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Shield className="h-8 w-8 text-primary" />
+                  <div>
+                    <h3 className="font-semibold">Have a Universal Health ID?</h3>
+                    <p className="text-sm text-muted-foreground">Quick access to your profile</p>
+                  </div>
+                </div>
+                <Link to="/health-id-login">
+                  <Button variant="default">
+                    Login with Health ID
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
 
           <Card className="shadow-lg border-0 gradient-card animate-slide-up">
             <CardHeader>
@@ -321,17 +346,23 @@ const Auth = () => {
                     )}
                     {userType === "doctor" && (
                       <div className="space-y-2">
-                        <Label htmlFor="medical-id">Medical ID</Label>
+                        <Label htmlFor="medical-id" className="flex items-center gap-2">
+                          <FileText className="h-4 w-4" />
+                          Doctor License ID
+                        </Label>
                         <Input 
                           id="medical-id" 
                           type="text" 
-                          placeholder="Your medical license ID"
+                          placeholder="e.g., MCI-12345678 or State Medical Council ID"
                           className="transition-smooth"
                           value={medicalId}
                           onChange={(e) => setMedicalId(e.target.value)}
                           disabled={loading}
                           required
                         />
+                        <p className="text-xs text-muted-foreground">
+                          Enter your Medical Council of India (MCI) registration number or State Medical Council license number
+                        </p>
                       </div>
                     )}
                     <div className="space-y-2">

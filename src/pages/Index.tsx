@@ -22,7 +22,9 @@ import {
   Users,
   ArrowRight,
   HeartPulse,
-  Calendar
+  Calendar,
+  Fingerprint,
+  Activity
 } from "lucide-react";
 
 const Index = () => {
@@ -63,6 +65,31 @@ const Index = () => {
               Bridge India's healthcare gap with AI-driven symptom analysis, multilingual support, 
               and instant doctor consultations. Healthcare for all, in your language.
             </p>
+            
+            {/* Universal Health ID Banner */}
+            <div className="mb-8 p-6 bg-gradient-to-r from-primary/10 via-secondary/10 to-primary/10 border-2 border-primary/20 rounded-2xl max-w-3xl mx-auto">
+              <div className="flex items-center justify-center gap-3 mb-3">
+                <Activity className="h-6 w-6 text-primary animate-pulse" />
+                <h3 className="text-2xl font-bold">Universal Health ID System</h3>
+              </div>
+              <p className="text-sm text-muted-foreground mb-4">
+                One ID for all your healthcare needs • Instant hospital access • Blockchain secured
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <Link to="/health-id-login">
+                  <Button size="lg" className="bg-primary hover:bg-primary/90 shadow-lg">
+                    <Fingerprint className="mr-2 h-5 w-5" />
+                    Login with Health ID
+                  </Button>
+                </Link>
+                <Link to="/health-id-demo">
+                  <Button size="lg" variant="outline">
+                    <Activity className="mr-2 h-5 w-5" />
+                    Try Demo
+                  </Button>
+                </Link>
+              </div>
+            </div>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/auth">
@@ -166,6 +193,90 @@ const Index = () => {
           </div>
           <div className="max-w-6xl mx-auto">
             <GovtSchemes limit={3} />
+          </div>
+        </div>
+      </section>
+
+      {/* Universal Health ID Demo Section */}
+      <section className="py-20 bg-gradient-to-br from-primary/5 via-background to-secondary/5">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12 animate-slide-up">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 border border-primary/20 rounded-full mb-4">
+              <Activity className="h-4 w-4 text-primary animate-pulse" />
+              <span className="text-sm font-medium text-primary">Universal Health ID System</span>
+            </div>
+            <h2 className="text-4xl font-bold mb-4">Your Complete Health Profile in One ID</h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Experience the future of healthcare with our Aadhaar-like Universal Health ID. 
+              One ID for all medical records, family health, vaccinations, and insurance.
+            </p>
+          </div>
+
+          <div className="max-w-5xl mx-auto">
+            <div className="grid gap-6 md:grid-cols-3 mb-8">
+              <Card className="border-2 hover:shadow-lg transition-shadow">
+                <CardContent className="pt-6">
+                  <div className="flex flex-col items-center text-center">
+                    <div className="p-3 bg-primary/10 rounded-full mb-4">
+                      <Fingerprint className="h-8 w-8 text-primary" />
+                    </div>
+                    <h3 className="font-semibold mb-2">14-Digit Health ID</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Unique identifier linking all your health records across hospitals
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-2 hover:shadow-lg transition-shadow">
+                <CardContent className="pt-6">
+                  <div className="flex flex-col items-center text-center">
+                    <div className="p-3 bg-blue-500/10 rounded-full mb-4">
+                      <Users className="h-8 w-8 text-blue-600" />
+                    </div>
+                    <h3 className="font-semibold mb-2">Family Linking</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Connect family members and manage everyone's health together
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-2 hover:shadow-lg transition-shadow">
+                <CardContent className="pt-6">
+                  <div className="flex flex-col items-center text-center">
+                    <div className="p-3 bg-green-500/10 rounded-full mb-4">
+                      <Shield className="h-8 w-8 text-green-600" />
+                    </div>
+                    <h3 className="font-semibold mb-2">Blockchain Secured</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Your data is encrypted and secured with blockchain technology
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link to="/health-id-login">
+                <Button size="lg" className="bg-primary hover:bg-primary/90 shadow-lg">
+                  <Fingerprint className="mr-2 h-5 w-5" />
+                  Login with Health ID
+                </Button>
+              </Link>
+              <Link to="/health-id-demo">
+                <Button size="lg" variant="outline">
+                  <Activity className="mr-2 h-5 w-5" />
+                  Try Interactive Demo
+                </Button>
+              </Link>
+              <Link to="/health-id-demo-profile">
+                <Button size="lg" variant="outline">
+                  <Users className="mr-2 h-5 w-5" />
+                  View Sample Profile
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
       </section>

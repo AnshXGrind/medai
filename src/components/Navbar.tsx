@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Activity, LogOut } from "lucide-react";
+import { Menu, X, Activity, LogOut, Gift } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import SettingsButton from "@/components/SettingsButton";
@@ -35,6 +35,10 @@ const Navbar = () => {
             </Link>
             <Link to="/resources" className="text-foreground hover:text-primary transition-smooth">
               Resources
+            </Link>
+            <Link to="/offers" className="flex items-center gap-1.5 text-foreground hover:text-primary transition-smooth">
+              <Gift className="h-4 w-4" />
+              Offers
             </Link>
             <Link to="/contact" className="text-foreground hover:text-primary transition-smooth">
               {t('contact')}
@@ -106,6 +110,14 @@ const Navbar = () => {
                 onClick={() => setIsMenuOpen(false)}
               >
                 Resources
+              </Link>
+              <Link
+                to="/offers"
+                className="px-3 py-2 text-foreground hover:text-primary hover:bg-muted rounded-lg transition-smooth flex items-center gap-2"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <Gift className="h-4 w-4" />
+                Offers
               </Link>
               <Link
                 to="/contact"

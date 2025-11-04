@@ -22,7 +22,7 @@ import GovernmentHealthHeatmap from "@/components/GovernmentHealthHeatmap";
 import JanAushadhiStockTracker from "@/components/JanAushadhiStockTracker";
 import SubsidyEligibilityChecker from "@/components/SubsidyEligibilityChecker";
 import VillageMode from "@/components/VillageMode";
-import { Brain, Video, MapPin, FileText, Send, Loader2, CreditCard, User as UserIcon, Calendar, Upload, Heart, Pill, BadgeIndianRupee, Activity, Wifi, Download, Clock, CheckCircle, XCircle, AlertCircle, Shield, Ambulance, BarChart3 } from "lucide-react";
+import { Brain, Video, MapPin, FileText, Send, Loader2, CreditCard, User as UserIcon, Calendar, Upload, Heart, Pill, BadgeIndianRupee, Activity, Wifi, Download, Clock, CheckCircle, XCircle, AlertCircle, Shield, Ambulance, BarChart3, Stethoscope } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
@@ -56,7 +56,7 @@ const PatientDashboard = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [consultations, setConsultations] = useState<Consultation[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [aadhaarNumber, setAadhaarNumber] = useState<string>("");
+  const [healthIdNumber, setHealthIdNumber] = useState<string>("");
   const [patientName, setPatientName] = useState<string>("");
   const [villageModeEnabled, setVillageModeEnabled] = useState(false);
   const [activeSection, setActiveSection] = useState<string>("home");
@@ -67,11 +67,11 @@ const PatientDashboard = () => {
   const loadUserData = async () => {
     if (!user) return;
     
-    // Get Aadhaar from user metadata
-    const aadhaar = user.user_metadata?.aadhaar_number || "";
+    // Get Health ID from user metadata (fallback to Aadhaar if no Health ID)
+    const healthId = user.user_metadata?.health_id || user.user_metadata?.aadhaar_number || "";
     const name = user.user_metadata?.full_name || user.email || "";
     
-    setAadhaarNumber(aadhaar);
+    setHealthIdNumber(healthId);
     setPatientName(name);
   };
 
@@ -428,18 +428,18 @@ provider with any questions regarding a medical condition.
           </div>
         </div>
 
-        {/* Patient Info Card - Aadhaar */}
-        {aadhaarNumber && (
+        {/* Patient Info Card - Health ID */}
+        {healthIdNumber && (
           <Card className="mb-4 md:mb-6 shadow-md border-primary/20 animate-fade-in touch-manipulation active:scale-[0.99]">
             <CardContent className="p-4 md:p-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3 md:gap-4">
                   <div className="p-2 md:p-3 bg-primary/10 rounded-lg">
-                    <CreditCard className="h-5 w-5 md:h-6 md:w-6 text-primary" />
+                    <Activity className="h-5 w-5 md:h-6 md:w-6 text-primary" />
                   </div>
                   <div>
-                    <p className="text-xs md:text-sm text-muted-foreground">Government ID (Aadhaar)</p>
-                    <p className="text-base md:text-lg font-semibold font-mono">{maskAadhaar(aadhaarNumber)}</p>
+                    <p className="text-xs md:text-sm text-muted-foreground">Universal Health ID</p>
+                    <p className="text-base md:text-lg font-semibold font-mono">{healthIdNumber.length > 14 ? maskAadhaar(healthIdNumber) : healthIdNumber}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 md:gap-3">
@@ -926,6 +926,37 @@ provider with any questions regarding a medical condition.
         {/* Government Schemes Section */}
         <div className="mt-8 animate-slide-up">
           <GovtSchemes limit={2} compact={true} />
+        </div>
+
+        {/* Quick Access Bar - Fixed at Bottom */}
+        <div className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-lg border-t border-border shadow-lg z-40 md:hidden">
+          <div className="container mx-auto px-4 py-3">
+            <div className="flex items-center justify-between gap-2">
+              <div className="text-xs text-muted-foreground">
+                Quick Access
+              </div>
+              <div className="flex gap-2">
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={() => navigate('/health-id-login')}
+                  className="text-xs"
+                >
+                  <Activity className="h-3 w-3 mr-1" />
+                  Health ID
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={() => navigate('/auth')}
+                  className="text-xs"
+                >
+                  <Stethoscope className="h-3 w-3 mr-1" />
+                  Doctor
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
         </div>
       </div>

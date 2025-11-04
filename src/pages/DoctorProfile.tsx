@@ -6,10 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Shield, CheckCircle } from "lucide-react";
 
 const DoctorProfile = () => {
   const { user } = useAuth();
@@ -115,13 +116,25 @@ const DoctorProfile = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="medical_id">Medical License ID (Read-only)</Label>
-              <Input
-                id="medical_id"
-                value={profile.medical_id}
-                disabled
-                className="bg-muted"
-              />
+              <Label htmlFor="medical_id" className="flex items-center gap-2">
+                <Shield className="h-4 w-4 text-primary" />
+                Doctor License ID
+              </Label>
+              <div className="relative">
+                <Input
+                  id="medical_id"
+                  value={profile.medical_id}
+                  disabled
+                  className="bg-muted font-mono pr-24"
+                />
+                <Badge className="absolute right-2 top-2 bg-green-500 text-white">
+                  <CheckCircle className="h-3 w-3 mr-1" />
+                  Verified
+                </Badge>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                This is your verified medical license ID registered during sign-up
+              </p>
             </div>
 
             <div className="space-y-2">

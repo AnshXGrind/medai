@@ -26,6 +26,7 @@ import EnhancedVaccinationReminder from "./pages/EnhancedVaccinationReminder";
 import OffersPage from "./pages/OffersPage";
 import HealthIDDemo from "./pages/HealthIDDemo";
 import HealthIDProfileDemo from "./pages/HealthIDProfileDemo";
+import HealthIDLogin from "./pages/HealthIDLogin";
 // Note: HealthIDProfile temporarily disabled due to missing DB tables
 // import HealthIDProfile from "./pages/HealthIDProfile";
 
@@ -68,6 +69,7 @@ const App = () => (
             <Route path="/emergency" element={<EmergencyHelp />} />
             <Route path="/vaccination-reminders" element={<VaccinationReminders />} />
             <Route path="/create-health-id" element={<CreateHealthID />} />
+            <Route path="/health-id-login" element={<HealthIDLogin />} />
             <Route path="/health-id/:healthId" element={<HealthIDProfileDemo />} />
             <Route path="/health-id-demo" element={<HealthIDDemo />} />
             <Route path="/health-id-demo-profile" element={<HealthIDProfileDemo />} />

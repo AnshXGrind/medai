@@ -4,10 +4,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Navbar from "@/components/Navbar";
-import { Users, Video, Clock, CheckCircle, XCircle } from "lucide-react";
+import { Users, Video, Clock, CheckCircle, XCircle, Shield, IdCard } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { formatHealthId } from "@/lib/universalHealthId";
 
 const DoctorDashboard = () => {
   const navigate = useNavigate();
@@ -80,7 +81,7 @@ const DoctorDashboard = () => {
   const loadAppointments = async () => {
     const { data, error } = await supabase
       .from("appointments")
-      .select("*, profiles!appointments_patient_id_fkey(full_name)")
+      .select("*, profiles!appointments_patient_id_fkey(full_name, health_id)")
       .eq("doctor_id", user?.id)
       .order("appointment_date", { ascending: true });
 
@@ -104,7 +105,7 @@ const DoctorDashboard = () => {
   const loadConsultations = async () => {
     const { data, error } = await supabase
       .from("consultations")
-      .select("*, profiles!consultations_patient_id_fkey(full_name)")
+      .select("*, profiles!consultations_patient_id_fkey(full_name, health_id)")
       .eq("doctor_id", user?.id)
       .order("created_at", { ascending: false });
 
@@ -241,11 +242,17 @@ const DoctorDashboard = () => {
                       className="p-4 border border-border rounded-lg hover:shadow-md transition-smooth"
                     >
                       <div className="flex items-start justify-between mb-3">
-                        <div>
+                        <div className="flex-1">
                           <h4 className="font-semibold">
                             {appointment.profiles?.full_name || 'Patient'}
                           </h4>
-                          <p className="text-sm text-muted-foreground">
+                          {appointment.profiles?.health_id && (
+                            <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+                              <Shield className="h-3 w-3" />
+                              <span className="font-mono">{formatHealthId(appointment.profiles.health_id)}</span>
+                            </div>
+                          )}
+                          <p className="text-sm text-muted-foreground mt-1">
                             {new Date(appointment.appointment_date).toLocaleString('en-IN', {
                               dateStyle: 'medium',
                               timeStyle: 'short'
@@ -310,11 +317,17 @@ const DoctorDashboard = () => {
                       className="p-4 border border-border rounded-lg hover:shadow-md transition-smooth"
                     >
                       <div className="flex items-start justify-between mb-3">
-                        <div>
+                        <div className="flex-1">
                           <h4 className="font-semibold">
                             {consultation.profiles?.full_name || 'Patient'}
                           </h4>
-                          <p className="text-sm text-muted-foreground">
+                          {consultation.profiles?.health_id && (
+                            <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+                              <Shield className="h-3 w-3" />
+                              <span className="font-mono">{formatHealthId(consultation.profiles.health_id)}</span>
+                            </div>
+                          )}
+                          <p className="text-sm text-muted-foreground mt-1">
                             {consultation.symptoms}
                           </p>
                         </div>

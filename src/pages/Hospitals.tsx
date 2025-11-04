@@ -2,12 +2,20 @@ import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { MapPin, Phone, Clock, Navigation } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { MapPin, Phone, Clock, Navigation, QrCode, Shield, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { formatHealthId, isValidHealthId } from "@/lib/universalHealthId";
 
 const Hospitals = () => {
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedHospital, setSelectedHospital] = useState<typeof hospitals[0] | null>(null);
+  const [healthId, setHealthId] = useState("");
+  const [healthIdVerified, setHealthIdVerified] = useState(false);
+  const [isCheckingIn, setIsCheckingIn] = useState(false);
 
   useEffect(() => {
     // Get user's current location
@@ -65,6 +73,33 @@ const Hospitals = () => {
   const openInMaps = (hospital: typeof hospitals[0]) => {
     const url = `https://www.google.com/maps/search/?api=1&query=${hospital.lat},${hospital.lng}`;
     window.open(url, '_blank');
+  };
+
+  const handleHealthIdChange = (value: string) => {
+    const formatted = formatHealthId(value);
+    setHealthId(formatted);
+    setHealthIdVerified(isValidHealthId(formatted));
+  };
+
+  const handleCheckIn = async () => {
+    if (!healthIdVerified) {
+      toast.error("Please enter a valid Health ID");
+      return;
+    }
+
+    setIsCheckingIn(true);
+    
+    // Simulate check-in API call
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    toast.success(`Checked in at ${selectedHospital?.name}!`, {
+      description: "Your Health ID has been verified and records are accessible to hospital staff."
+    });
+    
+    setHealthId("");
+    setHealthIdVerified(false);
+    setSelectedHospital(null);
+    setIsCheckingIn(false);
   };
 
   return (
@@ -127,14 +162,98 @@ const Hospitals = () => {
                   <Clock className="h-5 w-5 text-accent flex-shrink-0" />
                   <p className="text-sm">{hospital.hours}</p>
                 </div>
-                <Button
-                  onClick={() => openInMaps(hospital)}
-                  className="w-full mt-4"
-                  variant="outline"
-                >
-                  <Navigation className="h-4 w-4 mr-2" />
-                  Get Directions
-                </Button>
+                
+                <div className="space-y-2 mt-4">
+                  <Button
+                    onClick={() => openInMaps(hospital)}
+                    className="w-full"
+                    variant="outline"
+                  >
+                    <Navigation className="h-4 w-4 mr-2" />
+                    Get Directions
+                  </Button>
+
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button
+                        onClick={() => setSelectedHospital(hospital)}
+                        className="w-full"
+                        variant="default"
+                      >
+                        <QrCode className="h-4 w-4 mr-2" />
+                        Check-in with Health ID
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-md">
+                      <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                          <Shield className="h-5 w-5 text-primary" />
+                          Hospital Check-in
+                        </DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div className="p-3 bg-muted rounded-lg">
+                          <p className="text-sm font-semibold">{hospital.name}</p>
+                          <p className="text-xs text-muted-foreground mt-1">{hospital.address}</p>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="checkInHealthId" className="flex items-center gap-2">
+                            <Shield className="h-4 w-4 text-primary" />
+                            Your Universal Health ID <span className="text-red-500">*</span>
+                          </Label>
+                          <div className="relative">
+                            <Input
+                              id="checkInHealthId"
+                              type="text"
+                              placeholder="XX-XXXX-XXXX-XXXX"
+                              value={healthId}
+                              onChange={(e) => handleHealthIdChange(e.target.value)}
+                              maxLength={17}
+                              className={`font-mono ${healthIdVerified ? 'border-green-500' : ''}`}
+                            />
+                            {healthIdVerified && (
+                              <CheckCircle className="absolute right-3 top-3 h-4 w-4 text-green-500" />
+                            )}
+                          </div>
+                          {healthIdVerified && (
+                            <p className="text-xs text-green-600 flex items-center gap-1">
+                              <CheckCircle className="h-3 w-3" />
+                              Health ID verified - Ready to check in
+                            </p>
+                          )}
+                          <p className="text-xs text-muted-foreground">
+                            Your medical records will be securely accessible to authorized hospital staff
+                          </p>
+                        </div>
+
+                        <div className="p-3 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
+                          <p className="text-xs text-blue-800 dark:text-blue-200">
+                            <strong>What happens next:</strong>
+                            <br />• Your health records become accessible to hospital staff
+                            <br />• Medical history, allergies, and medications are available
+                            <br />• Insurance details are verified automatically
+                          </p>
+                        </div>
+
+                        <Button
+                          onClick={handleCheckIn}
+                          disabled={!healthIdVerified || isCheckingIn}
+                          className="w-full"
+                        >
+                          {isCheckingIn ? (
+                            <>Processing Check-in...</>
+                          ) : (
+                            <>
+                              <QrCode className="h-4 w-4 mr-2" />
+                              Complete Check-in
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
               </CardContent>
             </Card>
           ))}
