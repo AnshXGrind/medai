@@ -24,8 +24,10 @@ import VaccinationReminders from "./pages/VaccinationReminders";
 import CreateHealthID from "./pages/CreateHealthID";
 import EnhancedVaccinationReminder from "./pages/EnhancedVaccinationReminder";
 import OffersPage from "./pages/OffersPage";
-import HealthIDProfile from "./pages/HealthIDProfile";
 import HealthIDDemo from "./pages/HealthIDDemo";
+import HealthIDProfileDemo from "./pages/HealthIDProfileDemo";
+// Note: HealthIDProfile temporarily disabled due to missing DB tables
+// import HealthIDProfile from "./pages/HealthIDProfile";
 
 // Optimized QueryClient configuration for better performance
 const queryClient = new QueryClient({
@@ -66,8 +68,9 @@ const App = () => (
             <Route path="/emergency" element={<EmergencyHelp />} />
             <Route path="/vaccination-reminders" element={<VaccinationReminders />} />
             <Route path="/create-health-id" element={<CreateHealthID />} />
-            <Route path="/health-id/:healthId" element={<HealthIDProfile />} />
+            <Route path="/health-id/:healthId" element={<HealthIDProfileDemo />} />
             <Route path="/health-id-demo" element={<HealthIDDemo />} />
+            <Route path="/health-id-demo-profile" element={<HealthIDProfileDemo />} />
             <Route path="/enhanced-vaccination" element={<EnhancedVaccinationReminder />} />
             <Route path="/offers" element={<OffersPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

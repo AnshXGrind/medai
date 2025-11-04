@@ -137,6 +137,16 @@ export default function HealthIDDemo() {
                   organDonor={sampleHealthData.organDonor}
                   issueDate={sampleHealthData.issueDate}
                 />
+
+                <div className="flex gap-3">
+                  <Button 
+                    className="flex-1" 
+                    size="lg"
+                    onClick={() => window.location.href = '/health-id-demo-profile'}
+                  >
+                    View Full Profile with All Tabs →
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -382,7 +392,7 @@ export default function HealthIDDemo() {
                   <Button variant="outline" className="justify-start" onClick={() => window.location.href = '/create-health-id'}>
                     Create Health ID
                   </Button>
-                  <Button variant="outline" className="justify-start" onClick={() => window.location.href = '/health-id/27-1234-5678-9012'}>
+                  <Button variant="outline" className="justify-start" onClick={() => window.location.href = '/health-id-demo-profile'}>
                     View Sample Profile
                   </Button>
                   <Button variant="outline" className="justify-start" onClick={() => window.location.href = '/patient-dashboard'}>

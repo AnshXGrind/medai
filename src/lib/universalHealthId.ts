@@ -125,7 +125,7 @@ export async function verifyHealthId(healthId: string): Promise<{
   valid: boolean;
   exists: boolean;
   active: boolean;
-  data?: any;
+  data?: Record<string, unknown>;
   error?: string;
 }> {
   if (!isValidHealthId(healthId)) {

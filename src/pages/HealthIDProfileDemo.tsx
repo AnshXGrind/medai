@@ -2,7 +2,6 @@
  * Demo Health ID Profile with mock data (no database required)
  */
 
-import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -15,6 +14,8 @@ import {
 import { calculateAge } from '@/lib/universalHealthId';
 
 export default function HealthIDProfileDemo() {
+  console.log('HealthIDProfileDemo component rendering...');
+  
   // Mock Health ID data
   const healthData = {
     healthId: '27-1234-5678-9012',
