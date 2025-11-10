@@ -1,4 +1,63 @@
-name: CI Security, Quality & Compliance Checks
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    services:
+      mongo:
+        image: mongo:6.0
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.runCommand({ ping: 1 })'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      MONGODB_URI: mongodb://localhost:27017/medaid-modules
+      JWT_SECRET: testsecretkey123456789012345678901234
+      ENCRYPTION_KEY: testencryptionkey1234567890123456
+      FRONTEND_URL: http://localhost:8080
+      NODE_ENV: test
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install frontend dependencies
+        run: npm install
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Lint frontend
+        run: npm run lint
+
+      - name: Build backend Docker image
+        run: docker build -t medaid-backend ./backend-modules
+
+      - name: Build frontend Docker image
+        run: docker build -t medaid-frontend .
+
+      # Placeholder for backend tests (add test script when available)
+      - name: Backend tests
+        run: echo "No backend tests yet"
+
+      # Placeholder for frontend tests (add test script when available)
+      - name: Frontend tests
+        run: echo "No frontend tests yet"
+
+      # Optionally push images to registry (add steps if needed)name: CI Security, Quality & Compliance Checks
 
 on:
   push:

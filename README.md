@@ -149,6 +149,27 @@ npm install
 npm run dev
 ```
 
+### Quick Local Deployment with Docker Compose
+
+1. Copy and fill in `backend-modules/.env` using `.env.example` (set MongoDB URI, JWT_SECRET, etc.)
+2. Run:
+
+```powershell
+docker compose up --build
+```
+
+This will start:
+- Backend API at http://localhost:5000
+- Frontend at http://localhost:8080
+- MongoDB at localhost:27017 (data persisted in `mongo-data` volume)
+
+To stop and remove containers:
+```powershell
+docker compose down
+```
+
+For production, see `DEPLOY_CHECKLIST.md` for environment variables and cloud deployment steps.
+
 ### Database Setup
 
 Run the migrations in your Supabase SQL Editor:
