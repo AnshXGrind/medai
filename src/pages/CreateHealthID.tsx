@@ -311,7 +311,7 @@ export default function CreateHealthID() {
                   </div>
                   <div className="p-2 bg-white rounded">
                     <QRCodeGenerator 
-                      data={generatedHealthId}
+                      value={generatedHealthId}
                       size={100}
                     />
                   </div>
