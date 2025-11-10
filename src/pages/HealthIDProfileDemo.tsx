@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { HealthIDCard } from '@/components/HealthIDCard';
+import HealthIDCard from '@/components/HealthIDCard';
 import { 
   User, Heart, Shield, FileText, Users, Activity, 
   Calendar, MapPin, Phone, Mail, AlertCircle

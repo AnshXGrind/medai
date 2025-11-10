@@ -26,7 +26,7 @@ interface HealthIDCardProps {
   className?: string;
 }
 
-export const HealthIDCard: React.FC<HealthIDCardProps> = ({
+const HealthIDCard: React.FC<HealthIDCardProps> = ({
   healthId,
   fullName,
   dateOfBirth,
@@ -260,3 +260,5 @@ export const HealthIDCard: React.FC<HealthIDCardProps> = ({
     </div>
   );
 };
+
+export default React.memo(HealthIDCard);

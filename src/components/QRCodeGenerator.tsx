@@ -17,7 +17,7 @@ interface QRCodeGeneratorProps {
   className?: string;
 }
 
-const QRCodeGenerator: React.FC<QRCodeGeneratorProps> = ({
+const QRCodeGenerator: React.FC<QRCodeGeneratorProps> = React.memo(({
   value,
   size = 200,
   logo,
@@ -115,7 +115,7 @@ const QRCodeGenerator: React.FC<QRCodeGeneratorProps> = ({
       style={{ width: size, height: size }}
     />
   );
-};
+});
 
 // export default QRCodeGenerator; // Commenting out the named export
 export default QRCodeGenerator; // Ensuring it's only a default export
