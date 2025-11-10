@@ -50,33 +50,43 @@ All colors MUST be HSL.
   }
 
   .dark {
-    --background: 215 30% 8%;
-    --foreground: 210 25% 95%;
+    --background: 222 47% 6%;
+    --foreground: 210 40% 98%;
 
-    --card: 215 25% 12%;
-    --card-foreground: 210 25% 95%;
+    --card: 222 47% 11%;
+    --card-foreground: 210 40% 98%;
 
-    --popover: 215 25% 12%;
-    --popover-foreground: 210 25% 95%;
+    --popover: 222 47% 11%;
+    --popover-foreground: 210 40% 98%;
 
     --primary: 188 95% 42%;
-    --primary-foreground: 0 0% 100%;
+    --primary-foreground: 222 47% 6%;
 
     --secondary: 158 64% 52%;
-    --secondary-foreground: 0 0% 100%;
+    --secondary-foreground: 222 47% 6%;
 
-    --muted: 215 25% 18%;
-    --muted-foreground: 215 16% 65%;
+    --muted: 217 32% 17%;
+    --muted-foreground: 215 20% 65%;
 
     --accent: 188 95% 42%;
-    --accent-foreground: 0 0% 100%;
+    --accent-foreground: 222 47% 6%;
 
     --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive-foreground: 210 40% 98%;
 
-    --border: 215 25% 18%;
-    --input: 215 25% 18%;
+    --border: 217 32% 17%;
+    --input: 217 32% 17%;
     --ring: 188 95% 42%;
+
+    --gradient-hero: linear-gradient(135deg, hsl(188 95% 35%), hsl(158 64% 52%), hsl(222 47% 11%));
+    --gradient-card: linear-gradient(145deg, hsl(222 47% 11%), hsl(217 32% 17%));
+    --gradient-accent: linear-gradient(135deg, hsl(188 95% 42%), hsl(158 64% 52%));
+
+    --shadow-sm: 0 2px 4px hsl(222 47% 6% / 0.3);
+    --shadow-md: 0 4px 12px hsl(222 47% 6% / 0.4);
+    --shadow-lg: 0 10px 30px hsl(222 47% 6% / 0.5);
+    --shadow-glow: 0 0 30px hsl(188 95% 42% / 0.3);
+    --shadow-glow-primary: 0 0 40px hsl(188 95% 42% / 0.2);
   }
 }
 
@@ -104,8 +114,16 @@ All colors MUST be HSL.
     background: var(--gradient-card);
   }
 
+  .gradient-accent {
+    background: var(--gradient-accent);
+  }
+
   .shadow-glow {
     box-shadow: var(--shadow-glow);
+  }
+
+  .shadow-glow-primary {
+    box-shadow: var(--shadow-glow-primary);
   }
 
   .transition-smooth {
@@ -118,6 +136,18 @@ All colors MUST be HSL.
 
   .animate-slide-up {
     animation: slideUp 0.6s ease-out;
+  }
+
+  .animate-pulse-glow {
+    animation: pulseGlow 2s ease-in-out infinite;
+  }
+
+  .dark .card-hover {
+    @apply hover:shadow-glow-primary hover:scale-[1.02] transition-all duration-300;
+  }
+
+  .dark .button-glow {
+    @apply hover:shadow-glow transition-all duration-300;
   }
 
   @keyframes fadeIn {
@@ -137,6 +167,15 @@ All colors MUST be HSL.
     to {
       opacity: 1;
       transform: translateY(0);
+    }
+  }
+
+  @keyframes pulseGlow {
+    0%, 100% {
+      box-shadow: 0 0 20px hsl(188 95% 42% / 0.2);
+    }
+    50% {
+      box-shadow: 0 0 30px hsl(188 95% 42% / 0.4);
     }
   }
 }

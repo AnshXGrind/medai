@@ -4,30 +4,29 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { FileText, Shield, Download } from "lucide-react";
+import { FileText, Shield, Download, QrCode } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { formatHealthId } from "@/lib/universalHealthId";
 import QRCodeGenerator from "@/components/QRCodeGenerator";
+import QRCodeScanner from "@/components/QRCodeScanner";
 import { Tables } from "@/integrations/supabase/types";
 
 // Memoized record card for smoother UI
 const RecordCard = React.memo(({ record }: { record: Tables<'health_records'> }) => (
-  <Card className="shadow-md hover:shadow-lg transition-smooth">
+  <Card className="shadow-md hover:shadow-lg transition-smooth card-hover dark:border-border/50">
     <CardHeader>
       <div className="flex items-start justify-between">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-primary/10 rounded-lg">
-            <FileText className="h-5 w-5 text-primary" />
-          </div>
-          <div>
-            <CardTitle className="text-lg">{record.title}</CardTitle>
-            <p className="text-sm text-muted-foreground">
-              {new Date(record.created_at).toLocaleDateString()}
-            </p>
-          </div>
+        <div className="p-2 bg-primary/10 rounded-lg dark:bg-primary/20">
+          <FileText className="h-5 w-5 text-primary" />
         </div>
-        <Badge>{record.record_type}</Badge>
+        <div>
+          <CardTitle className="text-lg">{record.title}</CardTitle>
+          <p className="text-sm text-muted-foreground">
+            {new Date(record.created_at).toLocaleDateString()}
+          </p>
+        </div>
+        <Badge className="dark:bg-accent/20 dark:text-accent-foreground dark:border-accent/30">{record.record_type}</Badge>
       </div>
     </CardHeader>
     <CardContent>
@@ -41,6 +40,7 @@ const HealthRecords = () => {
   const [userProfile, setUserProfile] = useState<{ full_name: string } | null>(null);
   const [healthId, setHealthId] = useState<string | null>(null);
   const [showHealthIdCard, setShowHealthIdCard] = useState(false);
+  const [showScanner, setShowScanner] = useState(false);
   const { user } = useAuth();
 
   const loadUserProfile = useCallback(async () => {
@@ -97,14 +97,14 @@ const HealthRecords = () => {
 
         {/* Health ID Card Section */}
         {healthId && userProfile && (
-          <Card className="mb-8 shadow-lg border-2 border-primary/20 bg-gradient-to-r from-primary/5 to-secondary/5">
+          <Card className="mb-8 shadow-lg border-2 border-primary/20 bg-gradient-to-r from-primary/5 to-secondary/5 dark:from-primary/10 dark:to-secondary/10 dark:border-primary/30 card-hover">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <Shield className="h-8 w-8 text-primary" />
+                  <Shield className="h-8 w-8 text-primary dark:text-primary animate-pulse-glow" />
                   <div>
-                    <CardTitle>Your Universal Health ID</CardTitle>
-                    <p className="text-sm text-muted-foreground mt-1">
+                    <CardTitle className="dark:text-foreground">Your Universal Health ID</CardTitle>
+                    <p className="text-sm text-muted-foreground dark:text-muted-foreground">
                       Securely access your health records anywhere
                     </p>
                   </div>
@@ -113,6 +113,7 @@ const HealthRecords = () => {
                   variant="outline"
                   size="sm"
                   onClick={() => setShowHealthIdCard(!showHealthIdCard)}
+                  className="dark:border-border dark:hover:bg-accent/10 button-glow"
                 >
                   {showHealthIdCard ? 'Hide Card' : 'Show Card'}
                 </Button>
@@ -123,32 +124,32 @@ const HealthRecords = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Health ID Display */}
                   <div className="space-y-4">
-                    <div className="p-4 bg-card rounded-lg border">
-                      <Label className="text-xs text-muted-foreground">Health ID Number</Label>
-                      <p className="text-2xl font-mono font-bold mt-2">
+                    <div className="p-4 bg-card rounded-lg border dark:border-border/50 dark:bg-card/50">
+                      <Label className="text-xs text-muted-foreground dark:text-muted-foreground">Health ID Number</Label>
+                      <p className="text-2xl font-mono font-bold mt-2 dark:text-foreground">
                         {formatHealthId(healthId)}
                       </p>
                     </div>
-                    <div className="p-4 bg-card rounded-lg border">
-                      <Label className="text-xs text-muted-foreground">Holder Name</Label>
-                      <p className="text-lg font-semibold mt-2">
+                    <div className="p-4 bg-card rounded-lg border dark:border-border/50 dark:bg-card/50">
+                      <Label className="text-xs text-muted-foreground dark:text-muted-foreground">Holder Name</Label>
+                      <p className="text-lg font-semibold mt-2 dark:text-foreground">
                         {userProfile.full_name}
                       </p>
                     </div>
-                    <Button className="w-full" variant="outline">
+                    <Button className="w-full dark:bg-primary dark:hover:bg-primary/90 button-glow" variant="outline">
                       <Download className="h-4 w-4 mr-2" />
                       Download Health ID Card
                     </Button>
                   </div>
 
                   {/* QR Code */}
-                  <div className="flex flex-col items-center justify-center p-6 bg-card rounded-lg border">
-                    <p className="text-sm text-muted-foreground mb-4">Scan for Quick Access</p>
+                  <div className="flex flex-col items-center justify-center p-6 bg-card rounded-lg border dark:border-border/50 dark:bg-card/50">
+                    <p className="text-sm text-muted-foreground mb-4 dark:text-muted-foreground">Scan for Quick Access</p>
                     <QRCodeGenerator 
                       value={healthId}
                       size={200}
                     />
-                    <p className="text-xs text-muted-foreground mt-4 text-center">
+                    <p className="text-xs text-muted-foreground mt-4 text-center dark:text-muted-foreground">
                       Show this QR code at hospitals for instant check-in
                     </p>
                   </div>
@@ -158,7 +159,50 @@ const HealthRecords = () => {
           </Card>
         )}
 
-        <h2 className="text-2xl font-bold mb-4">Medical Records</h2>
+        {/* Quick Access Scanner */}
+        <div className="mb-8">
+          <Card className="shadow-lg border-2 border-primary/20 dark:border-primary/30">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-primary/10 rounded-lg dark:bg-primary/20">
+                    <QrCode className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <CardTitle className="dark:text-foreground">Quick Access Scanner</CardTitle>
+                    <p className="text-sm text-muted-foreground dark:text-muted-foreground">
+                      Scan Health ID QR codes for instant access
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowScanner(!showScanner)}
+                  className="dark:border-border dark:hover:bg-accent/10 button-glow"
+                >
+                  {showScanner ? 'Hide Scanner' : 'Open Scanner'}
+                </Button>
+              </div>
+            </CardHeader>
+            {showScanner && (
+              <CardContent>
+                <QRCodeScanner
+                  onScanSuccess={(data) => {
+                    console.log('Scanned:', data);
+                    // Here you would handle the scanned data
+                    // For example, navigate to the health record or show patient info
+                  }}
+                  onScanError={(error) => {
+                    console.error('Scan error:', error);
+                  }}
+                />
+              </CardContent>
+            )}
+          </Card>
+        </div>
+
+        <h2 className="text-2xl font-bold mb-4 dark:text-foreground">Medical Records</h2>
 
         {records.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

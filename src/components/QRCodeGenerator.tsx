@@ -5,6 +5,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import QRCode from 'qrcode';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface QRCodeGeneratorProps {
   value: string;
@@ -22,13 +23,21 @@ const QRCodeGenerator: React.FC<QRCodeGeneratorProps> = React.memo(({
   size = 200,
   logo,
   errorCorrectionLevel = 'M',
-  foregroundColor = '#000000',
-  backgroundColor = '#FFFFFF',
+  foregroundColor,
+  backgroundColor,
   onDataUrl,
   className = ''
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [error, setError] = useState<string | null>(null);
+  const { theme } = useTheme();
+
+  // Theme-aware default colors
+  const defaultForegroundColor = theme === 'dark' ? '#ffffff' : '#000000';
+  const defaultBackgroundColor = theme === 'dark' ? '#1a1a1a' : '#ffffff';
+
+  const fgColor = foregroundColor || defaultForegroundColor;
+  const bgColor = backgroundColor || defaultBackgroundColor;
 
   useEffect(() => {
     if (!value) {
@@ -52,8 +61,8 @@ const QRCodeGenerator: React.FC<QRCodeGeneratorProps> = React.memo(({
           margin: 2,
           errorCorrectionLevel,
           color: {
-            dark: foregroundColor,
-            light: backgroundColor
+            dark: fgColor,
+            light: bgColor
           }
         });
 
@@ -98,7 +107,7 @@ const QRCodeGenerator: React.FC<QRCodeGeneratorProps> = React.memo(({
     };
 
     generateQR();
-  }, [value, size, logo, errorCorrectionLevel, foregroundColor, backgroundColor, onDataUrl]);
+  }, [value, size, logo, errorCorrectionLevel, fgColor, bgColor, foregroundColor, backgroundColor, onDataUrl]);
 
   if (error) {
     return (
