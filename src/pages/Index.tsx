@@ -167,36 +167,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Healthcare News Section */}
-      <section className="py-20 bg-muted/30">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12 animate-slide-up">
-            <h2 className="text-4xl font-bold mb-4">Latest Healthcare News</h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Stay informed with the latest prevention tips, health alerts, and medical breakthroughs
-            </p>
-          </div>
-          <div className="max-w-5xl mx-auto">
-            <HealthNews limit={4} showHeader={false} />
-          </div>
-        </div>
-      </section>
-
-      {/* Government Schemes Section */}
-      <section className="py-20">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12 animate-slide-up">
-            <h2 className="text-4xl font-bold mb-4">Government Health Schemes</h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Access government healthcare benefits and insurance schemes - Apply directly
-            </p>
-          </div>
-          <div className="max-w-6xl mx-auto">
-            <GovtSchemes limit={3} />
-          </div>
-        </div>
-      </section>
-
       {/* Universal Health ID Demo Section */}
       <section className="py-20 bg-gradient-to-br from-primary/5 via-background to-secondary/5">
         <div className="container mx-auto px-4">
@@ -277,6 +247,36 @@ const Index = () => {
                 </Button>
               </Link>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Government Schemes Section */}
+      <section className="py-20">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12 animate-slide-up">
+            <h2 className="text-4xl font-bold mb-4">Government Health Schemes</h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Access government healthcare benefits and insurance schemes - Apply directly
+            </p>
+          </div>
+          <div className="max-w-6xl mx-auto">
+            <GovtSchemes limit={3} />
+          </div>
+        </div>
+      </section>
+
+      {/* Healthcare News Section */}
+      <section className="py-20 bg-muted/30">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12 animate-slide-up">
+            <h2 className="text-4xl font-bold mb-4">Latest Healthcare News</h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Stay informed with the latest prevention tips, health alerts, and medical breakthroughs
+            </p>
+          </div>
+          <div className="max-w-5xl mx-auto">
+            <HealthNews limit={4} showHeader={false} />
           </div>
         </div>
       </section>
