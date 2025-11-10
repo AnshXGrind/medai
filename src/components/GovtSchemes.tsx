@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import React, { useState, useMemo } from "react";
 import {
   Building2,
   ExternalLink,
@@ -155,8 +156,15 @@ interface GovtSchemesProps {
   compact?: boolean;
 }
 
-export const GovtSchemes = ({ limit, compact = false }: GovtSchemesProps) => {
-  const displayedSchemes = limit ? governmentSchemes.slice(0, limit) : governmentSchemes;
+
+const GovtSchemesComponent = ({ limit, compact = false }: GovtSchemesProps) => {
+  // Show 3 cards initially, reveal all on 'Show More'
+  const INITIAL_COUNT = limit ?? 3;
+  const [showAll, setShowAll] = useState(false);
+  const displayedSchemes = useMemo(() => {
+    if (showAll) return limit ? governmentSchemes.slice(0, limit) : governmentSchemes;
+    return (limit ? governmentSchemes.slice(0, limit) : governmentSchemes).slice(0, INITIAL_COUNT);
+  }, [showAll, limit, INITIAL_COUNT]);
 
   return (
     <Card className="shadow-md border-primary/10 overflow-hidden">
@@ -258,6 +266,14 @@ export const GovtSchemes = ({ limit, compact = false }: GovtSchemesProps) => {
               </CardContent>
             </Card>
           ))}
+          {/* Show More Button */}
+          {!showAll && ((limit ? governmentSchemes.slice(0, limit) : governmentSchemes).length > INITIAL_COUNT) && (
+            <div className="flex justify-center pt-2">
+              <Button size="sm" variant="outline" className="text-xs" onClick={() => setShowAll(true)}>
+                Show More
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Help Section */}
@@ -297,5 +313,7 @@ export const GovtSchemes = ({ limit, compact = false }: GovtSchemesProps) => {
     </Card>
   );
 };
+
+export const GovtSchemes = React.memo(GovtSchemesComponent);
 
 export default GovtSchemes;
