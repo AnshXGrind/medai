@@ -17,7 +17,7 @@ interface QRCodeGeneratorProps {
   className?: string;
 }
 
-export const QRCodeGenerator: React.FC<QRCodeGeneratorProps> = ({
+const QRCodeGenerator: React.FC<QRCodeGeneratorProps> = ({
   value,
   size = 200,
   logo,
@@ -116,6 +116,8 @@ export const QRCodeGenerator: React.FC<QRCodeGeneratorProps> = ({
     />
   );
 };
+
+export default QRCodeGenerator;
 
 /**
  * Generate QR code as data URL (for use in PDFs, etc.)
