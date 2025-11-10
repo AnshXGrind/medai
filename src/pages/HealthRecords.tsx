@@ -8,7 +8,7 @@ import { FileText, Shield, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { formatHealthId } from "@/lib/universalHealthId";
-import { QRCodeGenerator } from "@/components/QRCodeGenerator";
+import QRCodeGenerator from "@/components/QRCodeGenerator";
 
 const HealthRecords = () => {
   const [records, setRecords] = useState<any[]>([]);
