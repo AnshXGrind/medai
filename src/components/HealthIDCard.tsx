@@ -7,7 +7,7 @@ import React, { useRef, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { QRCodeGenerator } from './QRCodeGenerator';
+import QRCodeGenerator from './QRCodeGenerator';
 import { Download, Share2, CheckCircle2, Activity } from 'lucide-react';
 import { generateHealthIdQRData } from '@/lib/universalHealthId';
 import { downloadHealthIDCardAsPDF } from '@/lib/pdfExport';
