@@ -49,6 +49,60 @@ export const dataService = {
     return data || [];
   },
 
+  // Reconcile pending locally-generated health IDs with Supabase.
+  async reconcilePendingHealthIds() {
+    try {
+      const all = await localDb.health_ids.toArray();
+      const pending = all.filter((h: any) => h.pending_verification === true);
+      if (!pending.length) return { reconciled: 0 };
+
+      let reconciled = 0;
+
+      for (const item of pending) {
+        try {
+          // Check if already exists on server
+          const { data, error } = await supabase
+            .from('health_ids')
+            .select('*')
+            .eq('health_id_number', item.health_id_number)
+            .maybeSingle();
+
+          if (error) {
+            console.warn('Reconcile lookup error', error);
+            continue;
+          }
+
+          if (data) {
+            // Server already has it; mark local as reconciled
+            await localDb.health_ids.update(item.id, { pending_verification: false, synced_at: new Date().toISOString() });
+            reconciled++;
+            continue;
+          }
+
+          // Insert into server
+          const insertPayload = { ...item, pending_verification: undefined };
+          const { data: inserted, error: insertErr } = await supabase.from('health_ids').insert(insertPayload).select().single();
+          if (insertErr) {
+            console.warn('Failed to insert pending health id', insertErr);
+            continue;
+          }
+
+          // Update local record
+          await localDb.health_ids.update(item.id, { pending_verification: false, synced_at: new Date().toISOString(), server_id: inserted?.id });
+          reconciled++;
+        } catch (inner) {
+          console.warn('Failed to reconcile item', inner);
+          continue;
+        }
+      }
+
+      return { reconciled };
+    } catch (err) {
+      console.warn('Failed to reconcile pending health ids', err);
+      return { reconciled: 0 };
+    }
+  },
+
   async getVaccinationsForHealthId(healthId: string) {
     if (!healthId) return [];
     const local = await localDb.vaccinations.where('health_id').equals(healthId).toArray();

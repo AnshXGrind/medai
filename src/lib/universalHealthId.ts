@@ -12,7 +12,9 @@ import { supabase } from '@/integrations/supabase/client';
  * Next 4 digits: District code
  * Next 8 digits: Unique number
  */
-export async function generateHealthId(stateCode: string = '01'): Promise<string> {
+export async function generateHealthId(stateCode: string = '01'):
+  Promise<{ healthId: string; timedOut?: boolean }>
+{
   const districtCode = Math.floor(1000 + Math.random() * 9000).toString();
   
   // Generate unique 8-digit number
@@ -20,34 +22,71 @@ export async function generateHealthId(stateCode: string = '01'): Promise<string
   let healthId: string;
   let isUnique = false;
   
-  // Try up to 10 times to generate a unique ID
+  // Try up to 10 times to generate a unique ID. Use a configurable timeout for DB
+  // checks so the UI doesn't freeze if the network or Supabase is slow/unavailable.
+  const queryWithTimeout = async (healthIdToCheck: string, ms = 3000) => {
+    const queryPromise = supabase
+      .from('health_ids')
+      .select('health_id_number')
+      .eq('health_id_number', healthIdToCheck)
+      .maybeSingle();
+
+    const timeoutPromise = new Promise<{ data: unknown; error: unknown }>((resolve) =>
+      setTimeout(() => resolve({ data: null, error: { timeout: true } }), ms),
+    );
+
+    try {
+      // Promise.race ensures we don't wait indefinitely for the DB.
+      const result = (await Promise.race([queryPromise, timeoutPromise])) as { data: unknown; error: unknown };
+      return result;
+    } catch (err) {
+      return { data: null, error: err };
+    }
+  };
+
+  let timedOut = false;
+
   for (let attempt = 0; attempt < 10; attempt++) {
     uniqueNumber = Math.floor(10000000 + Math.random() * 90000000).toString();
-    
+
     // Format: XX-XXXX-XXXX-XXXX
     const part1 = uniqueNumber.slice(0, 4);
     const part2 = uniqueNumber.slice(4, 8);
     healthId = `${stateCode}-${districtCode}-${part1}-${part2}`;
-    
-    // Check if ID already exists
-    const { data, error } = await supabase
-      .from('health_ids')
-      .select('health_id_number')
-      .eq('health_id_number', healthId)
-      .single();
-    
-    if (error && error.code === 'PGRST116') {
-      // No matching row found - ID is unique
+
+    // Check if ID already exists (with timeout)
+    const { data, error } = await queryWithTimeout(healthId, 3000);
+
+    // If timeout or other DB error, mark timedOut and proceed optimistically
+    if (error) {
+      const errRec = error as unknown as Record<string, unknown>;
+      if ('timeout' in errRec && errRec['timeout'] === true) {
+        console.warn('Supabase check timed out, proceeding optimistically');
+        timedOut = true;
+        isUnique = true;
+        break;
+      }
+
+      if ('code' in errRec) {
+        console.warn('Supabase returned an error, proceeding optimistically', errRec);
+        isUnique = true;
+        break;
+      }
+    }
+
+    // If data is null, the ID does not exist and is unique
+    if (!data) {
       isUnique = true;
       break;
     }
+    // otherwise loop and try another ID
   }
   
   if (!isUnique) {
     throw new Error('Failed to generate unique Health ID after 10 attempts');
   }
-  
-  return healthId!;
+
+  return { healthId: healthId!, timedOut };
 }
 
 /**

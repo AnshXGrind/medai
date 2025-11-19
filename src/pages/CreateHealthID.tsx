@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { generateHealthId, STATE_CODES } from "@/lib/universalHealthId";
+import { localDb } from "@/shared/services/local.db";
 import QRCodeGenerator from "@/components/QRCodeGenerator";
 
 interface DocumentUpload {
@@ -47,6 +48,7 @@ export default function CreateHealthID() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [healthIdCreated, setHealthIdCreated] = useState(false);
   const [generatedHealthId, setGeneratedHealthId] = useState("");
+  const [offlineGenerated, setOfflineGenerated] = useState(false);
 
   // Form Data
   const [formData, setFormData] = useState({
@@ -255,7 +257,8 @@ export default function CreateHealthID() {
       const stateCode = stateEntry ? stateEntry[0] : '01'; // Default to 01 if not found
 
       // Generate unique Health ID using the utility function
-      const healthId = await generateHealthId(stateCode);
+      const result = await generateHealthId(stateCode);
+      const healthId = result.healthId;
 
       setGeneratedHealthId(healthId);
       setHealthIdCreated(true);
@@ -263,6 +266,26 @@ export default function CreateHealthID() {
       toast.success("Universal Health ID created successfully!", {
         description: `Your Health ID: ${healthId}`
       });
+
+      // If the DB check timed out, inform the user and persist locally for reconciliation
+      if (result.timedOut) {
+        toast.info('Proceeding offline — Health ID generated locally. It will be verified when network is available.');
+
+        try {
+          // Persist a minimal local record for later reconciliation
+          await localDb.health_ids.put({
+            id: generatedHealthId,
+            health_id_number: generatedHealthId,
+            holder_name: `${formData.firstName} ${formData.lastName}`,
+            created_at: new Date().toISOString(),
+            pending_verification: true,
+            is_active: false,
+          });
+          setOfflineGenerated(true);
+        } catch (e) {
+          console.warn('Failed to write pending health id to local DB', e);
+        }
+      }
 
     } catch (error) {
       console.error('Error creating Health ID:', error);
@@ -279,6 +302,14 @@ export default function CreateHealthID() {
         <div className="max-w-2xl mx-auto py-12">
           <Card className="shadow-xl border-2 border-green-500">
             <CardContent className="p-8 text-center space-y-6">
+                    {offlineGenerated && (
+                      <Alert className="border-yellow-200 bg-yellow-50 dark:bg-yellow-950">
+                        <AlertCircle className="h-4 w-4 text-yellow-600" />
+                        <AlertDescription className="text-sm">
+                          Proceeding offline — Health ID generated locally and will be verified when network is available.
+                        </AlertDescription>
+                      </Alert>
+                    )}
               <div className="flex justify-center">
                 <div className="p-6 bg-green-100 dark:bg-green-900 rounded-full">
                   <CheckCircle2 className="h-20 w-20 text-green-600 dark:text-green-300" />

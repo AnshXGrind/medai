@@ -23,6 +23,32 @@ import EmergencyHelp from "./pages/EmergencyHelp";
 import VaccinationReminders from "./pages/VaccinationReminders";
 import CreateHealthID from "./pages/CreateHealthID";
 import EnhancedVaccinationReminder from "./pages/EnhancedVaccinationReminder";
+import React, { useEffect } from 'react';
+import dataService from '@/shared/services/data.service';
+
+const NetworkReconciler = () => {
+  useEffect(() => {
+    const handleOnline = async () => {
+      try {
+        const res = await dataService.reconcilePendingHealthIds();
+        if (res && res.reconciled) {
+          console.info('Reconciled pending health ids:', res.reconciled);
+        }
+      } catch (e) {
+        console.warn('Network reconciler failed', e);
+      }
+    };
+
+    window.addEventListener('online', handleOnline);
+
+    // Attempt once on mount as well
+    handleOnline();
+
+    return () => window.removeEventListener('online', handleOnline);
+  }, []);
+
+  return null;
+};
 import OffersPage from "./pages/OffersPage";
 import HealthIDDemo from "./pages/HealthIDDemo";
 import HealthIDProfileDemo from "./pages/HealthIDProfileDemo";
@@ -52,6 +78,9 @@ const App = () => (
         <Sonner />
         <PWAInstallPrompt />
         <BrowserRouter basename={import.meta.env.BASE_URL}>
+          {/* Reconcile pending local changes when network comes back */}
+          {/* We attach an event listener at the top-level so reconciliation runs when reconnecting */}
+          <NetworkReconciler />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
@@ -82,6 +111,6 @@ const App = () => (
       </TooltipProvider>
     </LanguageProvider>
   </QueryClientProvider>
-);
+    );
 
 export default App;
