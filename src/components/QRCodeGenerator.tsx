@@ -51,62 +51,73 @@ const QRCodeGenerator: React.FC<QRCodeGeneratorProps> = React.memo(({
       return;
     }
 
-    const generateQR = async () => {
-      try {
-        setError(null);
-        
-        // Generate QR code
-        await QRCode.toCanvas(canvas, value, {
-          width: size,
-          margin: 2,
-          errorCorrectionLevel,
-          color: {
-            dark: fgColor,
-            light: bgColor
-          }
-        });
+    const scheduleGenerate = () => {
+      const doGenerate = async () => {
+        try {
+          setError(null);
 
-        // Add logo if provided
-        if (logo) {
-          const ctx = canvas.getContext('2d');
-          if (ctx) {
-            const img = new Image();
-            img.crossOrigin = 'anonymous';
-            img.onload = () => {
-              const logoSize = size * 0.2; // Logo takes 20% of QR code
-              const x = (size - logoSize) / 2;
-              const y = (size - logoSize) / 2;
-              
-              // Draw white background for logo
-              ctx.fillStyle = backgroundColor;
-              ctx.fillRect(x - 5, y - 5, logoSize + 10, logoSize + 10);
-              
-              // Draw logo
-              ctx.drawImage(img, x, y, logoSize, logoSize);
-              
-              // Callback with data URL
-              if (onDataUrl) {
-                onDataUrl(canvas.toDataURL('image/png'));
-              }
-            };
-            img.onerror = () => {
-              console.error('Failed to load logo image');
-              if (onDataUrl) {
-                onDataUrl(canvas.toDataURL('image/png'));
-              }
-            };
-            img.src = logo;
+          // Generate QR code onto canvas
+          await QRCode.toCanvas(canvas, value, {
+            width: size,
+            margin: 2,
+            errorCorrectionLevel,
+            color: {
+              dark: fgColor,
+              light: bgColor
+            }
+          });
+
+          // Add logo if provided
+          if (logo) {
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+              const img = new Image();
+              img.crossOrigin = 'anonymous';
+              img.onload = () => {
+                const logoSize = size * 0.2; // Logo takes 20% of QR code
+                const x = (size - logoSize) / 2;
+                const y = (size - logoSize) / 2;
+
+                // Draw white background for logo
+                ctx.fillStyle = backgroundColor;
+                ctx.fillRect(x - 5, y - 5, logoSize + 10, logoSize + 10);
+
+                // Draw logo
+                ctx.drawImage(img, x, y, logoSize, logoSize);
+
+                // Callback with data URL
+                if (onDataUrl) {
+                  onDataUrl(canvas.toDataURL('image/png'));
+                }
+              };
+              img.onerror = () => {
+                console.error('Failed to load logo image');
+                if (onDataUrl) {
+                  onDataUrl(canvas.toDataURL('image/png'));
+                }
+              };
+              img.src = logo;
+            }
+          } else if (onDataUrl) {
+            onDataUrl(canvas.toDataURL('image/png'));
           }
-        } else if (onDataUrl) {
-          onDataUrl(canvas.toDataURL('image/png'));
+        } catch (err) {
+          console.error('Failed to generate QR code:', err);
+          setError('Failed to generate QR code');
         }
-      } catch (err) {
-        console.error('Failed to generate QR code:', err);
-        setError('Failed to generate QR code');
+      };
+
+      if ('requestIdleCallback' in window) {
+        (window as unknown as { requestIdleCallback?: (cb: () => void) => void }).requestIdleCallback(() => { void doGenerate(); });
+      } else {
+        // Slight delay to allow UI to render first
+        const t = setTimeout(() => { void doGenerate(); }, 50);
+        return () => clearTimeout(t);
       }
     };
 
-    generateQR();
+    const cancel = scheduleGenerate();
+    return cancel;
   }, [value, size, logo, errorCorrectionLevel, fgColor, bgColor, foregroundColor, backgroundColor, onDataUrl]);
 
   if (error) {

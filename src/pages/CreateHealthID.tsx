@@ -245,23 +245,46 @@ export default function CreateHealthID() {
 
   // Submit and create Health ID
   const handleSubmit = async () => {
-    if (!validateStep(currentStep)) return;
+    // Lightweight performance tracing
+    type PerfEntry = { label: string; ts: number };
+    const win = window as unknown as { __createHealthIdPerf?: PerfEntry[] };
+    const perf: PerfEntry[] = win.__createHealthIdPerf || [];
+    const mark = (label: string) => {
+      const entry: PerfEntry = { label, ts: Date.now() };
+      perf.push(entry);
+      return entry;
+    };
+    win.__createHealthIdPerf = perf;
+
+    mark('submit_start');
+
+    if (!validateStep(currentStep)) {
+      mark('validation_failed');
+      return;
+    }
 
     setIsSubmitting(true);
+    mark('submit_setIsSubmitting');
 
     try {
       // Get state code from state name
+      mark('before_get_state_code');
       const stateEntry = Object.entries(STATE_CODES).find(
         ([_, name]) => name.toLowerCase() === formData.state.toLowerCase()
       );
       const stateCode = stateEntry ? stateEntry[0] : '01'; // Default to 01 if not found
+      mark('after_get_state_code');
 
       // Generate unique Health ID using the utility function
+      mark('generateHealthId_start');
       const result = await generateHealthId(stateCode);
+      mark('generateHealthId_end');
       const healthId = result.healthId;
 
+      mark('before_set_state_generated');
       setGeneratedHealthId(healthId);
       setHealthIdCreated(true);
+      mark('after_set_state_generated');
 
       toast.success("Universal Health ID created successfully!", {
         description: `Your Health ID: ${healthId}`
@@ -271,27 +294,61 @@ export default function CreateHealthID() {
       if (result.timedOut) {
         toast.info('Proceeding offline — Health ID generated locally. It will be verified when network is available.');
 
+        // Mark offline flag immediately so UI shows state
+        setOfflineGenerated(true);
+
+        // Persist a minimal local record for later reconciliation in background
+        const pendingRecord = {
+          id: healthId,
+          health_id_number: healthId,
+          holder_name: `${formData.firstName} ${formData.lastName}`,
+          created_at: new Date().toISOString(),
+          pending_verification: true,
+          is_active: false,
+        };
+
+        mark('schedule_localdb_write');
         try {
-          // Persist a minimal local record for later reconciliation
-          await localDb.health_ids.put({
-            id: generatedHealthId,
-            health_id_number: generatedHealthId,
-            holder_name: `${formData.firstName} ${formData.lastName}`,
-            created_at: new Date().toISOString(),
-            pending_verification: true,
-            is_active: false,
-          });
-          setOfflineGenerated(true);
+          if ('requestIdleCallback' in window) {
+            (window as unknown as { requestIdleCallback?: (cb: () => void) => void }).requestIdleCallback(() => {
+              void localDb.health_ids.put(pendingRecord).then(() => mark('localdb_write_done')).catch(e => { mark('localdb_write_failed'); console.warn('Failed to write pending health id to local DB', e); });
+            });
+          } else {
+            // Fallback: schedule with setTimeout to yield to UI
+            setTimeout(() => {
+              void localDb.health_ids.put(pendingRecord).then(() => mark('localdb_write_done')).catch(e => { mark('localdb_write_failed'); console.warn('Failed to write pending health id to local DB', e); });
+            }, 50);
+          }
         } catch (e) {
-          console.warn('Failed to write pending health id to local DB', e);
+          mark('schedule_localdb_write_failed');
+          console.warn('Failed to schedule local DB write', e);
         }
+        mark('scheduled_localdb_write');
       }
 
     } catch (error) {
       console.error('Error creating Health ID:', error);
       toast.error("Failed to create Health ID. Please try again.");
+      mark('submit_error');
     } finally {
       setIsSubmitting(false);
+      mark('submit_end');
+
+      // Print a condensed perf summary to the console for quick inspection
+      try {
+        type PerfEntry = { label: string; ts: number };
+        const perfArr: PerfEntry[] = (window as unknown as { __createHealthIdPerf?: PerfEntry[] }).__createHealthIdPerf || [];
+        console.groupCollapsed('CreateHealthID perf');
+        for (let i = 0; i < perfArr.length; i++) {
+          const cur = perfArr[i];
+          const next = perfArr[i+1];
+          const dur = next ? (next.ts - cur.ts) : 0;
+          console.log(`${cur.label} @ ${new Date(cur.ts).toISOString()}  (+${dur}ms)`);
+        }
+        console.groupEnd();
+      } catch (e) {
+        /* ignore */
+      }
     }
   };
 

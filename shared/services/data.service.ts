@@ -52,12 +52,13 @@ export const dataService = {
   // Reconcile pending locally-generated health IDs with Supabase.
   async reconcilePendingHealthIds() {
     try {
-      const all = await localDb.health_ids.toArray();
-      const pending = all.filter((h: any) => h.pending_verification === true);
+      // Query only pending items to avoid loading the entire table into memory
+      const pending = await localDb.health_ids.where('pending_verification').equals(true).toArray();
       if (!pending.length) return { reconciled: 0 };
 
       let reconciled = 0;
 
+      // Process sequentially with small yields to keep the UI responsive
       for (const item of pending) {
         try {
           // Check if already exists on server
@@ -69,6 +70,8 @@ export const dataService = {
 
           if (error) {
             console.warn('Reconcile lookup error', error);
+            // yield briefly before continuing
+            await new Promise((r) => setTimeout(r, 20));
             continue;
           }
 
@@ -76,22 +79,32 @@ export const dataService = {
             // Server already has it; mark local as reconciled
             await localDb.health_ids.update(item.id, { pending_verification: false, synced_at: new Date().toISOString() });
             reconciled++;
+            await new Promise((r) => setTimeout(r, 20));
             continue;
           }
 
-          // Insert into server
-          const insertPayload = { ...item, pending_verification: undefined };
-          const { data: inserted, error: insertErr } = await supabase.from('health_ids').insert(insertPayload).select().single();
+          // Insert into server (strip local-only fields)
+          const insertPayload = { ...item };
+          delete (insertPayload as any).id;
+          delete (insertPayload as any).pending_verification;
+          delete (insertPayload as any).synced_at;
+
+          const { data: inserted, error: insertErr } = await supabase.from('health_ids').insert(insertPayload).select().maybeSingle();
           if (insertErr) {
             console.warn('Failed to insert pending health id', insertErr);
+            await new Promise((r) => setTimeout(r, 20));
             continue;
           }
 
-          // Update local record
-          await localDb.health_ids.update(item.id, { pending_verification: false, synced_at: new Date().toISOString(), server_id: inserted?.id });
+          // Update local record with server reference
+          await localDb.health_ids.update(item.id, { pending_verification: false, synced_at: new Date().toISOString(), server_id: (inserted as any)?.id });
           reconciled++;
+          // small yield
+          await new Promise((r) => setTimeout(r, 20));
         } catch (inner) {
           console.warn('Failed to reconcile item', inner);
+          // yield on error to avoid tight loop
+          await new Promise((r) => setTimeout(r, 50));
           continue;
         }
       }

@@ -5,6 +5,7 @@
 
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import pdfWorkerClient from '@/lib/pdfWorkerClient';
 
 /**
  * Download HTML element as PDF
@@ -35,25 +36,33 @@ export async function downloadElementAsPDF(
     const imgWidth = canvas.width;
     const imgHeight = canvas.height;
 
-    // Create PDF
-    const pdf = new jsPDF({
-      orientation: options?.orientation || 'portrait',
-      unit: 'px',
-      format: [imgWidth / scale, imgHeight / scale]
-    });
+    // Offload PDF creation to worker (jsPDF heavy work)
+    try {
+      const blob = await pdfWorkerClient.generatePdfFromDataUrls([imgData], filename, {
+        orientation: options?.orientation || 'portrait',
+        format: [imgWidth / scale, imgHeight / scale]
+      });
 
-    // Add image to PDF
-    pdf.addImage(
-      imgData,
-      'PNG',
-      0,
-      0,
-      imgWidth / scale,
-      imgHeight / scale
-    );
+      // Download blob in main thread
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      // Fallback to main-thread generation
+      const pdf = new jsPDF({
+        orientation: options?.orientation || 'portrait',
+        unit: 'px',
+        format: [imgWidth / scale, imgHeight / scale]
+      });
 
-    // Download
-    pdf.save(filename);
+      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth / scale, imgHeight / scale);
+      pdf.save(filename);
+    }
   } catch (error) {
     console.error('Failed to generate PDF:', error);
     throw new Error('Failed to generate PDF');
@@ -99,44 +108,49 @@ export async function generateMultiPagePDF(
 ): Promise<void> {
   try {
     const scale = options?.scale || 2;
-    let pdf: jsPDF | null = null;
+    // Convert elements to images first (non-blocking scheduling)
+    const images: string[] = [];
 
     for (let i = 0; i < elements.length; i++) {
-      const element = elements[i];
-      
-      // Convert to canvas
-      const canvas = await html2canvas(element, {
+      const canvas = await html2canvas(elements[i], {
         scale,
         useCORS: true,
         backgroundColor: '#ffffff',
         logging: false,
         allowTaint: true
       });
-
-      const imgData = canvas.toDataURL('image/png');
-      const imgWidth = canvas.width / scale;
-      const imgHeight = canvas.height / scale;
-
-      // Create PDF on first page
-      if (i === 0) {
-        pdf = new jsPDF({
-          orientation: options?.orientation || 'portrait',
-          unit: 'px',
-          format: [imgWidth, imgHeight]
-        });
-      } else if (pdf) {
-        pdf.addPage([imgWidth, imgHeight], imgHeight > imgWidth ? 'portrait' : 'landscape');
-      }
-
-      // Add image
-      if (pdf) {
-        pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
-      }
+      images.push(canvas.toDataURL('image/png'));
+      // yield to event loop briefly
+      await new Promise((r) => setTimeout(r, 10));
     }
 
-    // Download
-    if (pdf) {
-      pdf.save(filename);
+    try {
+      const blob = await pdfWorkerClient.generatePdfFromDataUrls(images, filename, {
+        orientation: options?.orientation || 'portrait'
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      // Fallback to main-thread assembly if worker fails
+      let pdf: jsPDF | null = null;
+      for (let i = 0; i < images.length; i++) {
+        const img = images[i];
+        const imgObj = new Image();
+        // We can't sync get width/height here easily; use default A4 fallback
+        const w = 595; const h = 842;
+        if (i === 0) pdf = new jsPDF({ orientation: options?.orientation || 'portrait', unit: 'px', format: [w, h] });
+        if (pdf) {
+          pdf.addImage(img, 'PNG', 0, 0, w, h);
+          if (i < images.length - 1) pdf.addPage();
+        }
+      }
+      if (pdf) pdf.save(filename);
     }
   } catch (error) {
     console.error('Failed to generate multi-page PDF:', error);

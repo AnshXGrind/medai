@@ -42,7 +42,16 @@ const NetworkReconciler = () => {
     window.addEventListener('online', handleOnline);
 
     // Attempt once on mount as well
-    handleOnline();
+    if ('requestIdleCallback' in window) {
+      // Schedule reconciliation during idle time to avoid startup jank
+      // Type-safe access to requestIdleCallback
+      const ric = (window as unknown as { requestIdleCallback?: (cb: () => void, opts?: { timeout?: number }) => void }).requestIdleCallback;
+      if (ric) ric(() => { void handleOnline(); }, { timeout: 2000 });
+    } else {
+      // Fallback: delay the reconciliation slightly so initial rendering isn't blocked
+      const t = setTimeout(() => { void handleOnline(); }, 1500);
+      return () => clearTimeout(t);
+    }
 
     return () => window.removeEventListener('online', handleOnline);
   }, []);
