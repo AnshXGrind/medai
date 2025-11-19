@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,10 +10,40 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { formatHealthId } from "@/lib/universalHealthId";
 
+interface ProfileRef {
+  full_name?: string;
+  health_id?: string;
+}
+
+interface ConsultationItem {
+  id: string;
+  patient_id: string;
+  doctor_id?: string;
+  symptoms?: string;
+  status?: string;
+  priority?: string;
+  ai_analysis?: string;
+  created_at?: string;
+  profiles?: ProfileRef;
+}
+
+interface AppointmentItem {
+  id: string;
+  patient_id: string;
+  doctor_id?: string;
+  appointment_type?: string;
+  appointment_date?: string;
+  status?: string;
+  consultation_fee?: number;
+  notes?: string;
+  created_at?: string;
+  profiles?: ProfileRef;
+}
+
 const DoctorDashboard = () => {
   const navigate = useNavigate();
-  const [consultations, setConsultations] = useState<any[]>([]);
-  const [appointments, setAppointments] = useState<any[]>([]);
+  const [consultations, setConsultations] = useState<ConsultationItem[]>([]);
+  const [appointments, setAppointments] = useState<AppointmentItem[]>([]);
   const [stats, setStats] = useState({
     totalPatients: 0,
     todayConsultations: 0,
@@ -23,15 +53,55 @@ const DoctorDashboard = () => {
   });
   const { user } = useAuth();
 
-  useEffect(() => {
-    if (user) {
-      loadConsultations();
-      loadAppointments();
-      setupRealtimeSubscription();
+  const loadAppointments = useCallback(async () => {
+    const { data, error } = await supabase
+      .from("appointments")
+      .select("*, profiles!appointments_patient_id_fkey(full_name, health_id)")
+      .eq("doctor_id", user?.id)
+      .order("appointment_date", { ascending: true });
+
+    if (!error && data) {
+      setAppointments(data as AppointmentItem[]);
+      
+      // Update stats with appointments
+      const today = new Date().toDateString();
+      const todayAppointments = data.filter(a => 
+        new Date(a.appointment_date).toDateString() === today
+      ).length;
+      
+      setStats(prev => ({
+        ...prev,
+        todayAppointments,
+        pending: prev.pending + data.filter(a => a.status === 'pending').length
+      }));
     }
   }, [user]);
 
-  const setupRealtimeSubscription = () => {
+  const loadConsultations = useCallback(async () => {
+    const { data, error } = await supabase
+      .from("consultations")
+      .select("*, profiles!consultations_patient_id_fkey(full_name, health_id)")
+      .eq("doctor_id", user?.id)
+      .order("created_at", { ascending: false });
+
+    if (!error && data) {
+      setConsultations(data as ConsultationItem[]);
+      
+      // Calculate stats
+      const today = new Date().toDateString();
+      setStats(prev => ({
+        ...prev,
+        totalPatients: new Set(data.map(c => c.patient_id)).size,
+        todayConsultations: data.filter(c => 
+          new Date(c.created_at).toDateString() === today
+        ).length,
+        pending: data.filter(c => c.status === 'pending').length,
+        completed: data.filter(c => c.status === 'completed').length
+      }));
+    }
+  }, [user]);
+
+  const setupRealtimeSubscription = useCallback(() => {
     // Subscribe to consultations
     const consultationsChannel = supabase
       .channel('consultations-changes')
@@ -76,55 +146,17 @@ const DoctorDashboard = () => {
       supabase.removeChannel(consultationsChannel);
       supabase.removeChannel(appointmentsChannel);
     };
-  };
+  }, [loadConsultations, loadAppointments, user]);
 
-  const loadAppointments = async () => {
-    const { data, error } = await supabase
-      .from("appointments")
-      .select("*, profiles!appointments_patient_id_fkey(full_name, health_id)")
-      .eq("doctor_id", user?.id)
-      .order("appointment_date", { ascending: true });
-
-    if (!error && data) {
-      setAppointments(data);
-      
-      // Update stats with appointments
-      const today = new Date().toDateString();
-      const todayAppointments = data.filter(a => 
-        new Date(a.appointment_date).toDateString() === today
-      ).length;
-      
-      setStats(prev => ({
-        ...prev,
-        todayAppointments,
-        pending: prev.pending + data.filter(a => a.status === 'pending').length
-      }));
+  useEffect(() => {
+    if (user) {
+      loadConsultations();
+      loadAppointments();
+      const cleanup = setupRealtimeSubscription();
+      return cleanup;
     }
-  };
+  }, [user, loadConsultations, loadAppointments, setupRealtimeSubscription]);
 
-  const loadConsultations = async () => {
-    const { data, error } = await supabase
-      .from("consultations")
-      .select("*, profiles!consultations_patient_id_fkey(full_name, health_id)")
-      .eq("doctor_id", user?.id)
-      .order("created_at", { ascending: false });
-
-    if (!error && data) {
-      setConsultations(data);
-      
-      // Calculate stats
-      const today = new Date().toDateString();
-      setStats(prev => ({
-        ...prev,
-        totalPatients: new Set(data.map(c => c.patient_id)).size,
-        todayConsultations: data.filter(c => 
-          new Date(c.created_at).toDateString() === today
-        ).length,
-        pending: data.filter(c => c.status === 'pending').length,
-        completed: data.filter(c => c.status === 'completed').length
-      }));
-    }
-  };
 
   const handleConsultation = async (consultationId: string, status: 'accepted' | 'declined') => {
     const { error } = await supabase

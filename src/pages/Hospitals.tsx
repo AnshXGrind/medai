@@ -128,11 +128,10 @@ const Hospitals = () => {
               width="100%"
               height="100%"
               frameBorder="0"
-              style={{ border: 0 }}
               src={`https://www.google.com/maps/embed/v1/search?key=&q=hospitals+near+${userLocation.lat},${userLocation.lng}&zoom=13`}
               allowFullScreen
               title="Hospitals Map"
-              className="grayscale-0"
+              className="grayscale-0 border-0"
             />
           ) : (
             <div className="flex items-center justify-center h-full">

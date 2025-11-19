@@ -111,7 +111,7 @@ const QRCodeGenerator: React.FC<QRCodeGeneratorProps> = React.memo(({
 
   if (error) {
     return (
-      <div className="flex items-center justify-center bg-red-50 text-red-600 rounded p-4" style={{ width: size, height: size }}>
+      <div className="flex items-center justify-center bg-red-50 text-red-600 rounded p-4">
         <p className="text-sm text-center">{error}</p>
       </div>
     );
@@ -121,7 +121,8 @@ const QRCodeGenerator: React.FC<QRCodeGeneratorProps> = React.memo(({
     <canvas
       ref={canvasRef}
       className={className}
-      style={{ width: size, height: size }}
+      width={size}
+      height={size}
     />
   );
 });

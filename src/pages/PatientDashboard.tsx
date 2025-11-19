@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -24,6 +24,7 @@ import SubsidyEligibilityChecker from "@/components/SubsidyEligibilityChecker";
 import VillageMode from "@/components/VillageMode";
 import { Brain, Video, MapPin, FileText, Send, Loader2, CreditCard, User as UserIcon, Calendar, Upload, Heart, Pill, BadgeIndianRupee, Activity, Wifi, Download, Clock, CheckCircle, XCircle, AlertCircle, Shield, Ambulance, BarChart3, Stethoscope } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { dataService } from '@/shared/services/data.service';
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -64,40 +65,35 @@ const PatientDashboard = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
 
-  const loadUserData = async () => {
+  const loadUserData = useCallback(async () => {
     if (!user) return;
-    
-    // Get Health ID from user metadata (fallback to Aadhaar if no Health ID)
+
     const healthId = user.user_metadata?.health_id || user.user_metadata?.aadhaar_number || "";
     const name = user.user_metadata?.full_name || user.email || "";
-    
+
     setHealthIdNumber(healthId);
     setPatientName(name);
-  };
+  }, [user]);
 
-  const loadConsultations = async () => {
-    const { data, error } = await supabase
-      .from("consultations")
-      .select("*")
-      .eq("patient_id", user?.id)
-      .order("created_at", { ascending: false });
-
-    if (!error && data) {
-      setConsultations(data);
+  const loadConsultations = useCallback(async () => {
+    if (!user) return;
+    try {
+      const data = await dataService.getConsultationsByPatient(user.id);
+      setConsultations(data || []);
+    } catch (err) {
+      console.error('Failed to load consultations:', err);
     }
-  };
+  }, [user]);
 
-  const loadAppointments = async () => {
-    const { data, error } = await supabase
-      .from("appointments")
-      .select("*")
-      .eq("patient_id", user?.id)
-      .order("created_at", { ascending: false });
-
-    if (!error && data) {
-      setAppointments(data);
+  const loadAppointments = useCallback(async () => {
+    if (!user) return;
+    try {
+      const data = await dataService.getAppointmentsByPatient(user.id);
+      setAppointments(data || []);
+    } catch (err) {
+      console.error('Failed to load appointments:', err);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     if (user) {
@@ -105,8 +101,7 @@ const PatientDashboard = () => {
       loadAppointments();
       loadUserData();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, [user, loadConsultations, loadAppointments, loadUserData]);
 
   const symptomSchema = z.object({
     symptoms: z.string()
@@ -672,9 +667,8 @@ provider with any questions regarding a medical condition.
                       variant="outline"
                       size="sm"
                       onClick={() => {
-                        const reportWindow = window.open('', '_blank');
-                        if (reportWindow) {
-                          reportWindow.document.write(`
+                        try {
+                          const html = `
                             <html>
                               <head>
                                 <title>MedAid - Medical Analysis Report</title>
@@ -705,8 +699,19 @@ provider with any questions regarding a medical condition.
                                 <pre>${analysis}</pre>
                               </body>
                             </html>
-                          `);
-                          reportWindow.document.close();
+                          `;
+
+                          const blob = new Blob([html], { type: 'text/html' });
+                          const url = URL.createObjectURL(blob);
+                          const reportWindow = window.open(url, '_blank');
+                          // Revoke the object URL after a short delay to allow the window to load
+                          setTimeout(() => URL.revokeObjectURL(url), 10000);
+                          if (!reportWindow) {
+                            toast.error('Unable to open report window. Please allow popups.');
+                          }
+                        } catch (err) {
+                          console.error('Failed to open report window:', err);
+                          toast.error('Failed to open report window');
                         }
                       }}
                       className="text-xs"

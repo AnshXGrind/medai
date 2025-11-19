@@ -12,8 +12,10 @@ import {
   Calendar, MapPin, Phone, Mail, AlertCircle
 } from 'lucide-react';
 import { calculateAge } from '@/lib/universalHealthId';
+import { useNavigate } from 'react-router-dom';
 
 export default function HealthIDProfileDemo() {
+  const navigate = useNavigate();
   console.log('HealthIDProfileDemo component rendering...');
   
   // Mock Health ID data
@@ -607,13 +609,13 @@ export default function HealthIDProfileDemo() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex flex-wrap gap-3">
-              <Button onClick={() => window.location.href = '/health-id-demo'}>
+              <Button onClick={() => navigate('/health-id-demo')}>
                 ← Back to Demo
               </Button>
-              <Button variant="outline" onClick={() => window.location.href = '/create-health-id'}>
+              <Button variant="outline" onClick={() => navigate('/create-health-id')}>
                 Create Real Health ID
               </Button>
-              <Button variant="outline" onClick={() => window.location.href = '/'}>
+              <Button variant="outline" onClick={() => navigate('/')}>
                 Go to Home
               </Button>
             </div>

@@ -287,6 +287,8 @@ export default function DigitalHealthRecordHub() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">Full Name *</label>
                   <input
                     type="text"
+                    title="Full Name"
+                    placeholder="Enter full name"
                     required
                     value={formData.fullName}
                     onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
@@ -297,6 +299,7 @@ export default function DigitalHealthRecordHub() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">Date of Birth *</label>
                   <input
                     type="date"
+                    title="Date of Birth"
                     required
                     value={formData.dateOfBirth}
                     onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
@@ -306,6 +309,7 @@ export default function DigitalHealthRecordHub() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Blood Group</label>
                   <select
+                    title="Blood Group"
                     value={formData.bloodGroup}
                     onChange={(e) => setFormData({ ...formData, bloodGroup: e.target.value })}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
@@ -325,6 +329,7 @@ export default function DigitalHealthRecordHub() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">Allergies (comma separated)</label>
                   <input
                     type="text"
+                    title="Allergies"
                     placeholder="e.g. Penicillin, Peanuts"
                     value={formData.allergies}
                     onChange={(e) => setFormData({ ...formData, allergies: e.target.value })}
@@ -335,6 +340,7 @@ export default function DigitalHealthRecordHub() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">Chronic Conditions (comma separated)</label>
                   <input
                     type="text"
+                    title="Chronic Conditions"
                     placeholder="e.g. Diabetes, Hypertension"
                     value={formData.chronicConditions}
                     onChange={(e) => setFormData({ ...formData, chronicConditions: e.target.value })}
@@ -346,6 +352,7 @@ export default function DigitalHealthRecordHub() {
                   <div className="space-y-3">
                     <input
                       type="text"
+                      title="Emergency Contact Name"
                       placeholder="Contact Name"
                       value={formData.emergencyContact.name}
                       onChange={(e) => setFormData({ ...formData, emergencyContact: { ...formData.emergencyContact, name: e.target.value }})}
@@ -353,6 +360,7 @@ export default function DigitalHealthRecordHub() {
                     />
                     <input
                       type="tel"
+                      title="Emergency Contact Phone"
                       placeholder="Contact Phone"
                       value={formData.emergencyContact.phone}
                       onChange={(e) => setFormData({ ...formData, emergencyContact: { ...formData.emergencyContact, phone: e.target.value }})}
@@ -360,6 +368,7 @@ export default function DigitalHealthRecordHub() {
                     />
                     <input
                       type="text"
+                      title="Emergency Contact Relation"
                       placeholder="Relation"
                       value={formData.emergencyContact.relation}
                       onChange={(e) => setFormData({ ...formData, emergencyContact: { ...formData.emergencyContact, relation: e.target.value }})}
@@ -398,6 +407,7 @@ export default function DigitalHealthRecordHub() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">Select File</label>
                   <input
                     type="file"
+                    title="Select File"
                     onChange={handleFileChange}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg"
                     accept=".pdf,.jpg,.jpeg,.png"
@@ -409,6 +419,7 @@ export default function DigitalHealthRecordHub() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
                   <select
+                    title="Document Category"
                     value={uploadData.category}
                     onChange={(e) => setUploadData({ ...uploadData, category: e.target.value })}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg"

@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -44,6 +45,7 @@ export const SOSButton = () => {
   const [showQR, setShowQR] = useState(false);
   const [nearbyHospitals, setNearbyHospitals] = useState<NearbyHospital[]>([]);
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   // Emergency contacts
   const emergencyContacts: EmergencyContact[] = [
@@ -249,7 +251,7 @@ export const SOSButton = () => {
                 <Button
                   variant="outline"
                   className="h-auto py-3 md:py-4 flex flex-col items-start gap-1 md:gap-2 text-left touch-manipulation active:scale-95"
-                  onClick={() => window.open("/health-records")}
+                  onClick={() => navigate('/health-records')}
                 >
                   <Heart className="h-4 w-4 md:h-5 md:w-5 text-pink-600" />
                   <div>

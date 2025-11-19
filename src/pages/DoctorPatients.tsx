@@ -12,16 +12,17 @@ import { ArrowLeft, User, Calendar } from "lucide-react";
 const DoctorPatients = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [patients, setPatients] = useState<any[]>([]);
+  interface PatientSummary {
+    patient_id: string;
+    profiles?: { full_name?: string };
+    created_at: string;
+    status: string;
+  }
+
+  const [patients, setPatients] = useState<PatientSummary[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
 
-  useEffect(() => {
-    if (user) {
-      loadPatients();
-    }
-  }, [user]);
-
-  const loadPatients = async () => {
+  const loadPatients = useCallback(async () => {
     const { data, error } = await supabase
       .from("consultations")
       .select("patient_id, profiles!consultations_patient_id_fkey(full_name), created_at, status")
@@ -30,16 +31,31 @@ const DoctorPatients = () => {
 
     if (!error && data) {
       // Group by patient_id to get unique patients with their latest consultation
-      const uniquePatients = data.reduce((acc: any[], curr) => {
+      const uniquePatients = data.reduce((acc: PatientSummary[], curr: ConsultationRow) => {
         if (!acc.find(p => p.patient_id === curr.patient_id)) {
-          acc.push(curr);
+          acc.push(curr as PatientSummary);
         }
         return acc;
       }, []);
       
       setPatients(uniquePatients);
     }
-  };
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (user) {
+      loadPatients();
+    }
+  }, [user, loadPatients]);
+
+  interface ConsultationRow {
+    patient_id: string;
+    profiles?: { full_name?: string };
+    created_at: string;
+    status: string;
+  }
+
+  
 
   const filteredPatients = patients.filter(patient =>
     patient.profiles?.full_name?.toLowerCase().includes(searchQuery.toLowerCase())

@@ -1,8 +1,10 @@
 import Navbar from "@/components/Navbar";
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
 const EmergencyHelp = () => {
+  const navigate = useNavigate();
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -34,7 +36,7 @@ const EmergencyHelp = () => {
             </div>
 
             <div className="mt-6">
-              <Button onClick={() => window.location.href = '/'}>Return to Home</Button>
+              <Button onClick={() => navigate('/')}>Return to Home</Button>
             </div>
           </CardContent>
         </Card>

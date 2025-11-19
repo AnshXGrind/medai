@@ -1,5 +1,6 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import '@/styles/animationDelays.css';
 import { Card, CardContent } from "@/components/ui/card";
 import { Target, Heart, Globe, Zap } from "lucide-react";
 
@@ -27,7 +28,7 @@ const About = () => {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-slide-up" style={{ animationDelay: '0.2s' }}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-slide-up ad-02">
               {values.map((value, index) => (
                 <Card key={index} className="gradient-card border-0 shadow-md hover:shadow-lg transition-smooth">
                   <CardContent className="p-6">
@@ -41,7 +42,7 @@ const About = () => {
               ))}
             </div>
 
-            <div className="animate-slide-up" style={{ animationDelay: '0.4s' }}>
+            <div className="animate-slide-up ad-04">
               <h2 className="text-3xl font-bold mb-4">Our Impact</h2>
               <p className="text-lg text-muted-foreground leading-relaxed mb-6">
                 By leveraging AI and voice technology, we're making healthcare accessible to everyone, regardless of language barriers 
@@ -58,7 +59,7 @@ const About = () => {
               </div>
             </div>
 
-            <div className="animate-slide-up" style={{ animationDelay: '0.6s' }}>
+            <div className="animate-slide-up ad-06">
               <h2 className="text-3xl font-bold mb-4">Supporting Digital India</h2>
               <p className="text-lg text-muted-foreground leading-relaxed">
                 MedAid aligns with the Smart Bharat mission and Digital India initiative, using technology to bridge the urban-rural 

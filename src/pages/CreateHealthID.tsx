@@ -473,6 +473,8 @@ export default function CreateHealthID() {
                     <Label htmlFor="gender">Gender <span className="text-red-500">*</span></Label>
                     <select
                       id="gender"
+                      title="Gender"
+                      aria-label="Gender"
                       className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
                       value={formData.gender}
                       onChange={(e) => handleInputChange('gender', e.target.value)}
@@ -489,6 +491,8 @@ export default function CreateHealthID() {
                     <Label htmlFor="bloodGroup">Blood Group</Label>
                     <select
                       id="bloodGroup"
+                      title="Blood Group"
+                      aria-label="Blood Group"
                       className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
                       value={formData.bloodGroup}
                       onChange={(e) => handleInputChange('bloodGroup', e.target.value)}
@@ -879,6 +883,8 @@ export default function CreateHealthID() {
                       <Label htmlFor="insuranceProvider">Insurance Provider</Label>
                       <select
                         id="insuranceProvider"
+                        title="Insurance Provider"
+                        aria-label="Insurance Provider"
                         className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
                         value={formData.insuranceProvider}
                         onChange={(e) => handleInputChange('insuranceProvider', e.target.value)}

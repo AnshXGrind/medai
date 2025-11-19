@@ -14,18 +14,25 @@ const ConsultationRoom = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [consultation, setConsultation] = useState<any>(null);
+  interface ProfileRef { full_name?: string }
+  interface ConsultationItem {
+    id: string;
+    patient_id?: string;
+    doctor_id?: string;
+    symptoms?: string;
+    status?: string;
+    priority?: string;
+    ai_analysis?: string;
+    created_at?: string;
+    profiles?: ProfileRef;
+  }
+
+  const [consultation, setConsultation] = useState<ConsultationItem | null>(null);
   const [notes, setNotes] = useState("");
   const [isMicOn, setIsMicOn] = useState(true);
   const [isVideoOn, setIsVideoOn] = useState(true);
 
-  useEffect(() => {
-    if (id) {
-      loadConsultation();
-    }
-  }, [id]);
-
-  const loadConsultation = async () => {
+  const loadConsultation = useCallback(async () => {
     const { data, error } = await supabase
       .from("consultations")
       .select("*, profiles!consultations_patient_id_fkey(full_name)")
@@ -33,10 +40,16 @@ const ConsultationRoom = () => {
       .single();
 
     if (!error && data) {
-      setConsultation(data);
-      setNotes(data.ai_analysis || "");
+      setConsultation(data as ConsultationItem);
+      setNotes((data as ConsultationItem).ai_analysis || "");
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    if (id) {
+      loadConsultation();
+    }
+  }, [id, loadConsultation]);
 
   const handleEndConsultation = async () => {
     // Block saving notes that contain harmful instructions

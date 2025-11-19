@@ -24,6 +24,7 @@ const toggleVariants = cva(
     },
   },
 );
+import { toggleVariants } from './variants';
 
 const Toggle = React.forwardRef<
   React.ElementRef<typeof TogglePrimitive.Root>,

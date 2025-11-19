@@ -143,33 +143,33 @@ export const retryRequest = async <T>(
 // Generic API request methods
 export const apiClient = {
   // GET request
-  get: async <T = any>(url: string, config?: AxiosRequestConfig): Promise<T> => {
+  get: async <T = unknown>(url: string, config?: AxiosRequestConfig): Promise<T> => {
     const response = await httpClient.get<T>(url, config);
-    return response.data;
+    return response.data as T;
   },
 
   // POST request
-  post: async <T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> => {
-    const response = await httpClient.post<T>(url, data, config);
-    return response.data;
+  post: async <T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> => {
+    const response = await httpClient.post<T>(url, data as unknown, config);
+    return response.data as T;
   },
 
   // PUT request
-  put: async <T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> => {
-    const response = await httpClient.put<T>(url, data, config);
-    return response.data;
+  put: async <T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> => {
+    const response = await httpClient.put<T>(url, data as unknown, config);
+    return response.data as T;
   },
 
   // PATCH request
-  patch: async <T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> => {
-    const response = await httpClient.patch<T>(url, data, config);
-    return response.data;
+  patch: async <T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> => {
+    const response = await httpClient.patch<T>(url, data as unknown, config);
+    return response.data as T;
   },
 
   // DELETE request
-  delete: async <T = any>(url: string, config?: AxiosRequestConfig): Promise<T> => {
+  delete: async <T = unknown>(url: string, config?: AxiosRequestConfig): Promise<T> => {
     const response = await httpClient.delete<T>(url, config);
-    return response.data;
+    return response.data as T;
   },
 };
 

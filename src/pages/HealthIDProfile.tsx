@@ -3,15 +3,16 @@
  * View and manage Health ID with family linking, records, etc.
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { HealthIDCard } from '@/components/HealthIDCard';
+import HealthIDCard from '@/components/HealthIDCard';
 import { supabase } from '@/integrations/supabase/client';
+import { dataService } from '@/shared/services/data.service';
 import { 
   User, 
   Users, 
@@ -30,75 +31,79 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-interface AddressData {
-  city?: string;
-  state?: string;
-  pincode?: string;
-  address_line?: string;
-}
+// Using loose types for this legacy/demo page to avoid tight supabase typings
+// that cause compilation errors while the DB schema stabilizes.
+type AnyObject = Record<string, unknown>;
 
+// Lightweight local interfaces to avoid cascading type errors while
+// Supabase-generated types are synchronized with the DB schema.
 interface EmergencyContact {
   name: string;
   phone: string;
-  relationship: string;
+  relationship?: string;
 }
 
 interface HealthIDData {
-  id: string;
+  id: string | number;
   health_id_number: string;
   full_name: string;
-  date_of_birth: string;
-  blood_group?: string;
-  photo_url?: string;
-  gender?: string;
-  address?: AddressData;
-  phone_number?: string;
-  email?: string;
-  verified: boolean;
-  organ_donor: boolean;
-  created_at: string;
+  date_of_birth?: string | null;
+  blood_group?: string | null;
+  photo_url?: string | null;
+  gender?: string | null;
+  address?: { city?: string; state?: string } | null;
+  verified?: boolean;
+  organ_donor?: boolean;
+  created_at?: string;
+  phone_number?: string | null;
+  email?: string | null;
   emergency_contacts?: EmergencyContact[];
 }
 
 interface FamilyMemberData {
-  id: string;
-  relationship: string;
+  id: string | number;
+  primary_health_id: string | number;
+  relationship?: string;
   member?: {
-    health_id_number: string;
-    full_name: string;
-    date_of_birth: string;
+    health_id_number?: string;
+    full_name?: string;
+    date_of_birth?: string;
     blood_group?: string;
-  };
+  } | null;
 }
 
 interface VaccinationData {
-  id: string;
-  vaccine_name: string;
-  dose_number: number;
+  id: string | number;
+  vaccine_name?: string;
+  dose_number?: number;
   total_doses?: number;
-  administered_date: string;
+  administered_date?: string;
   hospital_name?: string;
-  status: string;
+  status?: string;
 }
 
 interface MedicalRecordData {
-  id: string;
+  id: string | number;
+  record_type?: string;
   disease_name?: string;
-  record_type: string;
-  diagnosis_date: string;
   diagnosis?: string;
+  diagnosis_date?: string;
   doctor_name?: string;
 }
 
 interface InsurancePolicyData {
-  id: string;
-  provider_name: string;
-  policy_type: string;
-  policy_number: string;
-  coverage_amount: number;
-  end_date: string;
-  status: string;
+  id: string | number;
+  provider_name?: string;
+  policy_type?: string;
+  policy_number?: string;
+  coverage_amount?: number;
+  start_date?: string;
+  end_date?: string;
+  status?: string;
+  [key: string]: unknown;
 }
+
+// Use the shared `supabase` client (already typed in `integrations/supabase/client`).
 
 export default function HealthIDProfile() {
   const { healthId } = useParams<{ healthId: string }>();
@@ -111,71 +116,27 @@ export default function HealthIDProfile() {
   const [medicalRecords, setMedicalRecords] = useState<MedicalRecordData[]>([]);
   const [insurancePolicies, setInsurancePolicies] = useState<InsurancePolicyData[]>([]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      await loadHealthIDData();
-    };
-    fetchData();
-  }, [healthId]);
-
-  const loadHealthIDData = async () => {
+  const loadHealthIDData = useCallback(async () => {
     try {
       setLoading(true);
 
-      // Load health ID data
-      const { data: healthData, error: healthError } = await supabase
-        .from('health_ids')
-        .select('*')
-        .eq('health_id_number', healthId)
-        .single();
+      // Load health ID data (local-first)
+      const healthData = await dataService.getHealthIdByNumber(healthId);
+      setHealthIdData(healthData || null);
 
-      if (healthError) throw healthError;
-      setHealthIdData(healthData);
+      if (healthData) {
+        const [familyData, vaccinationsData, recordsData, insuranceData] = await Promise.all([
+          dataService.getFamilyMembers(healthData.id),
+          dataService.getVaccinationsForHealthId(healthData.id),
+          dataService.getMedicalRecordsForHealthId(healthData.id),
+          dataService.getInsurancePoliciesForHealthId(healthData.id)
+        ]);
 
-      // Load family members
-      const { data: familyData } = await supabase
-        .from('family_members')
-        .select(`
-          *,
-          member:member_health_id (
-            health_id_number,
-            full_name,
-            date_of_birth,
-            blood_group
-          )
-        `)
-        .eq('primary_health_id', healthData.id);
-
-      setFamilyMembers(familyData || []);
-
-      // Load vaccinations
-      const { data: vaccinationsData } = await supabase
-        .from('vaccinations')
-        .select('*')
-        .eq('health_id', healthData.id)
-        .order('administered_date', { ascending: false })
-        .limit(10);
-
-      setVaccinations(vaccinationsData || []);
-
-      // Load medical records
-      const { data: recordsData } = await supabase
-        .from('medical_records')
-        .select('*')
-        .eq('health_id', healthData.id)
-        .order('diagnosis_date', { ascending: false })
-        .limit(10);
-
-      setMedicalRecords(recordsData || []);
-
-      // Load insurance policies
-      const { data: insuranceData } = await supabase
-        .from('insurance_policies')
-        .select('*')
-        .eq('health_id', healthData.id)
-        .eq('status', 'active');
-
-      setInsurancePolicies(insuranceData || []);
+        setFamilyMembers(familyData || []);
+        setVaccinations(vaccinationsData || []);
+        setMedicalRecords(recordsData || []);
+        setInsurancePolicies(insuranceData || []);
+      }
 
     } catch (error) {
       console.error('Failed to load health ID data:', error);
@@ -183,7 +144,14 @@ export default function HealthIDProfile() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [healthId]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      await loadHealthIDData();
+    };
+    fetchData();
+  }, [loadHealthIDData]);
 
   if (loading) {
     return (

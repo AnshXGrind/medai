@@ -113,16 +113,16 @@ const Footer = () => {
               </li>
             </ul>
             <div className="flex gap-3">
-              <a href="#" className="p-2 bg-muted hover:bg-primary hover:text-primary-foreground rounded-lg transition-smooth">
+              <a href="#" title="Facebook" aria-label="Facebook" className="p-2 bg-muted hover:bg-primary hover:text-primary-foreground rounded-lg transition-smooth">
                 <Facebook className="h-4 w-4" />
               </a>
-              <a href="#" className="p-2 bg-muted hover:bg-primary hover:text-primary-foreground rounded-lg transition-smooth">
+              <a href="#" title="Twitter" aria-label="Twitter" className="p-2 bg-muted hover:bg-primary hover:text-primary-foreground rounded-lg transition-smooth">
                 <Twitter className="h-4 w-4" />
               </a>
-              <a href="#" className="p-2 bg-muted hover:bg-primary hover:text-primary-foreground rounded-lg transition-smooth">
+              <a href="#" title="LinkedIn" aria-label="LinkedIn" className="p-2 bg-muted hover:bg-primary hover:text-primary-foreground rounded-lg transition-smooth">
                 <Linkedin className="h-4 w-4" />
               </a>
-              <a href="#" className="p-2 bg-muted hover:bg-primary hover:text-primary-foreground rounded-lg transition-smooth">
+              <a href="#" title="Instagram" aria-label="Instagram" className="p-2 bg-muted hover:bg-primary hover:text-primary-foreground rounded-lg transition-smooth">
                 <Instagram className="h-4 w-4" />
               </a>
             </div>

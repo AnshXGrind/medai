@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -40,11 +40,83 @@ export const AppointmentBooking = ({ userId, onBookingComplete }: AppointmentBoo
   const [appointmentTime, setAppointmentTime] = useState("");
   const [notes, setNotes] = useState("");
 
+  const loadDoctors = useCallback(async () => {
+    try {
+      // Get doctor profiles with user information and medical IDs
+      // Using the schema from 20251029 migration (user_id, medical_id, specialty, consultation_fee)
+      const { data: doctorProfiles, error } = await supabase
+        .from('doctor_profiles')
+        .select('user_id, specialty, consultation_fee, medical_id, is_verified, is_online')
+        .eq('is_verified', true);
+
+      if (error) {
+        console.error('Error loading doctors:', error);
+        setMockDoctors();
+        return;
+      }
+
+      if (doctorProfiles && doctorProfiles.length > 0) {
+        // Get user profiles separately for doctor names
+        const userIds = doctorProfiles.map(p => p.user_id);
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, full_name')
+          .in('id', userIds);
+
+        const formattedDoctors: Doctor[] = doctorProfiles.map(profile => {
+          const userProfile = profiles?.find(p => p.id === profile.user_id);
+          return {
+            id: profile.user_id,
+            full_name: userProfile?.full_name || 'Doctor',
+            specialization: profile.specialty || 'General Physician',
+            video_rate: profile.consultation_fee || 500,
+            face_to_face_rate: Math.floor((profile.consultation_fee || 500) * 1.5),
+            medical_id: profile.medical_id || 'Not specified',
+            location: 'Available Online', // Can be enhanced later
+            experience_years: 10 // Can be enhanced later
+          };
+        });
+        
+        console.log('Loaded doctors from database:', formattedDoctors);
+        setDoctors(formattedDoctors);
+      } else {
+        console.log('No doctors found in database, using mock data');
+        setMockDoctors();
+      }
+    } catch (error) {
+      console.error('Error loading doctors:', error);
+      setMockDoctors();
+    }
+  }, []);
+
+  const setupRealtimeSubscription = useCallback(() => {
+    // Subscribe to real-time changes in doctor_profiles
+    const channel = supabase
+      .channel('doctor-profiles-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'doctor_profiles'
+        },
+        () => {
+          console.log('Doctor profiles updated, reloading...');
+          loadDoctors();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [loadDoctors]);
+
   useEffect(() => {
     loadDoctors();
-    setupRealtimeSubscription();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    const cleanup = setupRealtimeSubscription();
+    return cleanup;
+  }, [loadDoctors, setupRealtimeSubscription]);
 
   const setupRealtimeSubscription = () => {
     // Subscribe to real-time changes in doctor_profiles

@@ -212,28 +212,25 @@ export function generateCustomPDF(
 /**
  * Print element (opens print dialog)
  */
-export function printElement(element: HTMLElement): void {
-  const printWindow = window.open('', '', 'height=600,width=800');
-  
-  if (!printWindow) {
-    alert('Please allow popups to print');
-    return;
+export function printElement(element: HTMLElement, title: string = 'Print'): void {
+  try {
+    const html = `<!doctype html><html><head><meta charset="utf-8"><title>${title}</title><style>body { margin: 0; padding: 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; } @media print { body { margin: 0; padding: 0; } }</style></head><body>${element.outerHTML}<script>window.onload = function(){ try { window.print(); } catch(e) { console.error(e); } setTimeout(function(){ window.close(); }, 200); };</script></body></html>`;
+
+    const blob = new Blob([html], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+
+    const newWindow = window.open(url, '_blank');
+    if (!newWindow) {
+      // If popup blocked, navigate in current window as a fallback
+      window.location.href = url;
+    }
+
+    // Revoke URL after some time to free memory
+    setTimeout(() => {
+      try { URL.revokeObjectURL(url); } catch (e) { /* ignore */ }
+    }, 15000);
+  } catch (err) {
+    console.error('Failed to open print window:', err);
+    alert('Unable to open print window. Please allow popups or try downloading the PDF.');
   }
-
-  printWindow.document.write('<html><head><title>Print</title>');
-  printWindow.document.write('<style>');
-  printWindow.document.write('body { margin: 0; padding: 20px; }');
-  printWindow.document.write('@media print { body { margin: 0; padding: 0; } }');
-  printWindow.document.write('</style>');
-  printWindow.document.write('</head><body>');
-  printWindow.document.write(element.innerHTML);
-  printWindow.document.write('</body></html>');
-  printWindow.document.close();
-
-  // Wait for content to load before printing
-  printWindow.onload = () => {
-    printWindow.focus();
-    printWindow.print();
-    printWindow.close();
-  };
 }

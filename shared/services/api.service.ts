@@ -115,7 +115,7 @@ export const healthRecordsApi = {
   },
 
   // Upload document
-  uploadDocument: async (id: string, formData: FormData): Promise<any> => {
+  uploadDocument: async (id: string, formData: FormData): Promise<unknown> => {
     return apiClient.post(API_ENDPOINTS.HEALTH_RECORDS.UPLOAD(id), formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
@@ -142,7 +142,7 @@ export const medicineCheckerApi = {
   },
 
   // Get statistics
-  getStats: async (): Promise<any> => {
+  getStats: async (): Promise<unknown> => {
     return apiClient.get(API_ENDPOINTS.MEDICINE_CHECKER.STATS);
   },
 };

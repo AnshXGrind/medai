@@ -3,6 +3,7 @@
  */
 
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,6 +23,7 @@ import { Activity, IdCard, QrCode, FileText, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function HealthIDDemo() {
+  const navigate = useNavigate();
   const [generatedId, setGeneratedId] = useState('');
   const [validationResult, setValidationResult] = useState('');
   const [qrData, setQrData] = useState('');
@@ -142,7 +144,7 @@ export default function HealthIDDemo() {
                   <Button 
                     className="flex-1" 
                     size="lg"
-                    onClick={() => window.location.href = '/health-id-demo-profile'}
+                    onClick={() => navigate('/health-id-demo-profile')}
                   >
                     View Full Profile with All Tabs →
                   </Button>
@@ -389,13 +391,13 @@ export default function HealthIDDemo() {
               </CardHeader>
               <CardContent>
                 <div className="grid gap-2 md:grid-cols-3">
-                  <Button variant="outline" className="justify-start" onClick={() => window.location.href = '/create-health-id'}>
+                  <Button variant="outline" className="justify-start" onClick={() => navigate('/create-health-id')}>
                     Create Health ID
                   </Button>
-                  <Button variant="outline" className="justify-start" onClick={() => window.location.href = '/health-id-demo-profile'}>
+                  <Button variant="outline" className="justify-start" onClick={() => navigate('/health-id-demo-profile')}>
                     View Sample Profile
                   </Button>
-                  <Button variant="outline" className="justify-start" onClick={() => window.location.href = '/patient-dashboard'}>
+                  <Button variant="outline" className="justify-start" onClick={() => navigate('/patient-dashboard')}>
                     Patient Dashboard
                   </Button>
                 </div>

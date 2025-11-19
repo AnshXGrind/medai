@@ -13,10 +13,22 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { formatHealthId, isValidHealthId } from "@/lib/universalHealthId";
 
+interface DoctorItem {
+  user_id: string;
+  specialty?: string;
+  consultation_fee?: number;
+  medical_id?: string;
+  is_verified?: boolean;
+  is_online?: boolean;
+  profiles?: {
+    full_name?: string;
+  };
+}
+
 const Doctors = () => {
-  const [doctors, setDoctors] = useState<any[]>([]);
+  const [doctors, setDoctors] = useState<DoctorItem[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedDoctor, setSelectedDoctor] = useState<any>(null);
+  const [selectedDoctor, setSelectedDoctor] = useState<DoctorItem | null>(null);
   const [symptoms, setSymptoms] = useState("");
   const [healthId, setHealthId] = useState("");
   const [healthIdVerified, setHealthIdVerified] = useState(false);
@@ -34,7 +46,7 @@ const Doctors = () => {
       .eq("is_verified", true);
 
     if (!error && data) {
-      setDoctors(data);
+      setDoctors(data as DoctorItem[]);
     }
   };
 
@@ -137,7 +149,7 @@ const Doctors = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredDoctors.map((doctor) => (
-            <Card key={doctor.id} className="shadow-md hover:shadow-lg transition-smooth">
+            <Card key={doctor.user_id} className="shadow-md hover:shadow-lg transition-smooth">
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div>
@@ -162,12 +174,12 @@ const Doctors = () => {
                       <Star key={i} className="h-4 w-4 fill-current" />
                     ))}
                   </div>
-                  <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-muted-foreground">
                     Consultation Fee: ₹{doctor.consultation_fee || 500}
                   </p>
                   
                   <Dialog>
-                    <DialogTrigger asChild>
+                      <DialogTrigger asChild>
                       <Button 
                         className="w-full"
                         onClick={() => setSelectedDoctor(doctor)}
