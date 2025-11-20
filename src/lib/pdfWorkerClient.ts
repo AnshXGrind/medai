@@ -27,4 +27,14 @@ export async function generatePdfFromDataUrls(images: string[], filename: string
   });
 }
 
-export default { generatePdfFromDataUrls };
+export async function generatePdfFromBlobs(images: Blob[], filename: string, options?: { orientation?: 'portrait' | 'landscape'; format?: [number, number] }): Promise<Blob> {
+  return new Promise<Blob>((resolve, reject) => {
+    const id = nextId++;
+    pendingMap.set(id, { resolve, reject });
+    // Transfer the blobs to the worker to avoid copying base64 strings
+    const transfers: Transferable[] = images.map((b) => b as unknown as Transferable);
+    worker.postMessage({ id, images: images, filename, options }, transfers);
+  });
+}
+
+export default { generatePdfFromDataUrls, generatePdfFromBlobs };

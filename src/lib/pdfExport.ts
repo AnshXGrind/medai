@@ -5,7 +5,7 @@
 
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
-import pdfWorkerClient from '@/lib/pdfWorkerClient';
+import pdfWorkerClient, { generatePdfFromBlobs } from '@/lib/pdfWorkerClient';
 
 /**
  * Download HTML element as PDF
@@ -31,37 +31,55 @@ export async function downloadElementAsPDF(
       allowTaint: true
     });
 
-    // Get image data
-    const imgData = canvas.toDataURL('image/png');
+    // Get image blob to transfer to worker (more efficient than base64)
     const imgWidth = canvas.width;
     const imgHeight = canvas.height;
+    const blob = await new Promise<Blob | null>((res) => canvas.toBlob((b) => res(b), 'image/png'));
 
     // Offload PDF creation to worker (jsPDF heavy work)
     try {
-      const blob = await pdfWorkerClient.generatePdfFromDataUrls([imgData], filename, {
-        orientation: options?.orientation || 'portrait',
-        format: [imgWidth / scale, imgHeight / scale]
-      });
+      if (blob) {
+        const outBlob = await generatePdfFromBlobs([blob], filename, {
+          orientation: options?.orientation || 'portrait',
+          format: [imgWidth / scale, imgHeight / scale]
+        });
 
-      // Download blob in main thread
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-    } catch (err) {
-      // Fallback to main-thread generation
+        // Download blob in main thread
+        const url = URL.createObjectURL(outBlob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+        return;
+      }
+
+      // If we couldn't get a blob, fall back to dataURL path
+      const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF({
         orientation: options?.orientation || 'portrait',
         unit: 'px',
         format: [imgWidth / scale, imgHeight / scale]
       });
-
       pdf.addImage(imgData, 'PNG', 0, 0, imgWidth / scale, imgHeight / scale);
       pdf.save(filename);
+    } catch (err) {
+      // Fallback to main-thread generation if worker fails
+      try {
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF({
+          orientation: options?.orientation || 'portrait',
+          unit: 'px',
+          format: [imgWidth / scale, imgHeight / scale]
+        });
+        pdf.addImage(imgData, 'PNG', 0, 0, imgWidth / scale, imgHeight / scale);
+        pdf.save(filename);
+      } catch (e) {
+        console.error('Failed to generate PDF in fallback:', e);
+        throw e;
+      }
     }
   } catch (error) {
     console.error('Failed to generate PDF:', error);
@@ -108,8 +126,8 @@ export async function generateMultiPagePDF(
 ): Promise<void> {
   try {
     const scale = options?.scale || 2;
-    // Convert elements to images first (non-blocking scheduling)
-    const images: string[] = [];
+    // Convert elements to blobs first (non-blocking scheduling)
+    const blobs: Blob[] = [];
 
     for (let i = 0; i < elements.length; i++) {
       const canvas = await html2canvas(elements[i], {
@@ -119,13 +137,16 @@ export async function generateMultiPagePDF(
         logging: false,
         allowTaint: true
       });
-      images.push(canvas.toDataURL('image/png'));
+      // Prefer a Blob (transferable) to avoid base64 memory blowup
+      const b = await new Promise<Blob | null>((res) => canvas.toBlob((x) => res(x), 'image/png'));
+      if (b) blobs.push(b);
+      else blobs.push(new Blob([canvas.toDataURL('image/png')]));
       // yield to event loop briefly
       await new Promise((r) => setTimeout(r, 10));
     }
 
     try {
-      const blob = await pdfWorkerClient.generatePdfFromDataUrls(images, filename, {
+      const blob = await generatePdfFromBlobs(blobs, filename, {
         orientation: options?.orientation || 'portrait'
       });
       const url = URL.createObjectURL(blob);
@@ -137,17 +158,22 @@ export async function generateMultiPagePDF(
       a.remove();
       URL.revokeObjectURL(url);
     } catch (err) {
-      // Fallback to main-thread assembly if worker fails
+      // Fallback to main-thread assembly if worker fails: convert blobs to data URLs
+      const blobToDataUrl = (b: Blob) => new Promise<string>((res, rej) => {
+        const fr = new FileReader();
+        fr.onload = () => res(String(fr.result));
+        fr.onerror = rej;
+        fr.readAsDataURL(b);
+      });
+
       let pdf: jsPDF | null = null;
-      for (let i = 0; i < images.length; i++) {
-        const img = images[i];
-        const imgObj = new Image();
-        // We can't sync get width/height here easily; use default A4 fallback
+      for (let i = 0; i < blobs.length; i++) {
+        const dataUrl = await blobToDataUrl(blobs[i]);
         const w = 595; const h = 842;
         if (i === 0) pdf = new jsPDF({ orientation: options?.orientation || 'portrait', unit: 'px', format: [w, h] });
         if (pdf) {
-          pdf.addImage(img, 'PNG', 0, 0, w, h);
-          if (i < images.length - 1) pdf.addPage();
+          pdf.addImage(dataUrl, 'PNG', 0, 0, w, h);
+          if (i < blobs.length - 1) pdf.addPage();
         }
       }
       if (pdf) pdf.save(filename);
